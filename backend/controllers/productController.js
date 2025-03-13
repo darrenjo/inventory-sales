@@ -1,4 +1,5 @@
 import { Product, Batch } from "../models/product.js";
+import Color from "../models/color.js";
 import StockHistory from "../models/stockHistory.js";
 import winston from "../utils/logger.js";
 
@@ -7,6 +8,20 @@ export const createProduct = async (req, res) => {
   try {
     const { name, category, color_code } = req.body;
     const user = req.user; // Ambil data user dari middleware autentikasi
+
+    // Validasi apakah kode warna ada di tabel Color
+    const color = await Color.findOne({ where: { color_code } });
+    if (!color) {
+      return res.status(400).json({ error: "Invalid color code" });
+    }
+
+    // Cek apakah jenis kain cocok dengan kode warna
+    if (color.fabric_type !== name) {
+      return res.status(400).json({
+        error: `Color code ${color_code} is not valid for fabric type ${name}`,
+      });
+    }
+
     const product = await Product.create({
       name,
       category,

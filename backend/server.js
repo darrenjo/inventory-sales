@@ -12,6 +12,7 @@ import sequelize from "./config/database.js";
 import userRoutes from "./routes/userRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
+import colorRoutes from "./routes/colorRoutes.js";
 
 // Initialize Express
 const app = express();
@@ -31,6 +32,7 @@ app.use((req, res, next) => {
 app.use("/api/users", userRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
+app.use("/api/colors", colorRoutes);
 
 // Basic Route
 app.get("/", (req, res) => {

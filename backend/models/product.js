@@ -1,6 +1,7 @@
 import { Sequelize, DataTypes } from "sequelize";
 import sequelize from "../config/database.js";
 import User from "./user.js";
+import Color from "./color.js";
 
 const Product = sequelize.define("Product", {
   id: {
@@ -13,7 +14,11 @@ const Product = sequelize.define("Product", {
     type: DataTypes.ENUM("fabric", "kerah", "manset", "others"),
     allowNull: false,
   },
-  color_code: { type: DataTypes.STRING, allowNull: false }, // Kode warna unik berdasarkan jenis kain
+  color_code: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    references: { model: Color, key: "color_code" },
+  }, // Kode warna unik berdasarkan jenis kain
   by_who: {
     type: DataTypes.UUID,
     allowNull: false,
@@ -40,14 +45,17 @@ const Batch = sequelize.define("Batch", {
   date: { type: DataTypes.DATE, allowNull: false, defaultValue: Sequelize.NOW }, // Tanggal masuk
 });
 
+// Relasi Produk, Batch, User, dan Color
 User.hasMany(Batch, { foreignKey: "by_who" });
 Batch.belongsTo(User, { foreignKey: "by_who" });
 
 User.hasMany(Product, { foreignKey: "by_who" });
 Product.belongsTo(User, { foreignKey: "by_who" });
 
-// Relasi Produk & Batch
 Product.hasMany(Batch, { foreignKey: "product_id", onDelete: "CASCADE" });
 Batch.belongsTo(Product, { foreignKey: "product_id" });
+
+Color.hasMany(Product, { foreignKey: "color_code" });
+Product.belongsTo(Color, { foreignKey: "color_code" });
 
 export { Product, Batch };
