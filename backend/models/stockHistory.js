@@ -10,7 +10,7 @@ const StockHistory = sequelize.define("StockHistory", {
   },
   batch_id: { type: DataTypes.STRING, allowNull: false },
   product_id: { type: DataTypes.UUID, allowNull: false },
-  price: { type: DataTypes.INTEGER, allowNull: false },
+  price_per_unit: { type: DataTypes.INTEGER, allowNull: false }, // Periksa ini
   quantity: { type: DataTypes.INTEGER, allowNull: false }, // Bisa negatif untuk pengurangan stok
   by_who: {
     type: DataTypes.UUID,
