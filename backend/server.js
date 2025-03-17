@@ -14,6 +14,7 @@ import authRoutes from "./routes/authRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
 import colorRoutes from "./routes/colorRoutes.js";
 import salesRoutes from "./routes/salesRoutes.js";
+import customerRoutes from "./routes/customerRoutes.js";
 
 // Initialize Express
 const app = express();
@@ -35,6 +36,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/colors", colorRoutes);
 app.use("/api/sales", salesRoutes);
+app.use("/api/customers", customerRoutes);
 
 // Basic Route
 app.get("/", (req, res) => {

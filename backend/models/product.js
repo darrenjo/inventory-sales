@@ -2,6 +2,7 @@ import { Sequelize, DataTypes } from "sequelize";
 import sequelize from "../config/database.js";
 import User from "./user.js";
 import Color from "./color.js";
+import Customer from "./customer.js";
 
 const Product = sequelize.define("Product", {
   id: {
@@ -74,6 +75,25 @@ const Transaction = sequelize.define(
       type: DataTypes.INTEGER,
       allowNull: false,
     },
+    customer_id: {
+      type: DataTypes.UUID,
+      allowNull: true, // Bisa NULL jika transaksi dari pelanggan tanpa akun
+      references: {
+        model: Customer,
+        key: "id",
+      },
+      onDelete: "SET NULL",
+    },
+    discount: {
+      type: DataTypes.FLOAT,
+      allowNull: false,
+      defaultValue: 0,
+    },
+    points_earned: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+    },
     createdAt: {
       type: DataTypes.DATE,
       allowNull: false,
@@ -145,5 +165,11 @@ Batch.belongsTo(Product, { foreignKey: "product_id" });
 
 Color.hasMany(Product, { foreignKey: "color_code" });
 Product.belongsTo(Color, { foreignKey: "color_code" });
+
+Customer.hasMany(Transaction, {
+  foreignKey: "customer_id",
+  onDelete: "SET NULL",
+});
+Transaction.belongsTo(Customer, { foreignKey: "customer_id" });
 
 export { Product, Batch, TransactionDetail, Transaction };

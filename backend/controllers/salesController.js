@@ -12,6 +12,8 @@ import StockHistory from "../models/stockHistory.js";
 import logger from "../utils/logger.js";
 import Refund from "../models/refund.js";
 import Return from "../models/return.js";
+import Customer from "../models/customer.js";
+import LoyaltyHistory from "../models/loyality.js";
 import { generateBatchId } from "./productController.js";
 
 export const getSalesProducts = async (req, res) => {
@@ -49,7 +51,7 @@ export const getSalesProducts = async (req, res) => {
 };
 
 export const createTransaction = async (req, res) => {
-  const { sales } = req.body; // sales: [{ product_id, quantity }]
+  const { sales, customer_id } = req.body; // sales: [{ product_id, quantity }]
   const salesStaffId = req.user.id; // Ambil ID Sales Staff dari token
 
   if (!sales || sales.length === 0) {
@@ -60,16 +62,31 @@ export const createTransaction = async (req, res) => {
   const transaction = await sequelize.transaction();
   try {
     let totalPrice = 0;
-    const transactionId = crypto.randomUUID(); // Generate UUID untuk transaksi
+    let discount = 0;
+    let finalPrice = 0;
+    let pointsEarned = 0;
 
+    const transactionId = crypto.randomUUID(); // Generate UUID untuk transaksi
     logger.info(`Transaction started. ID: ${transactionId}`);
 
-    // Simpan transaksi utama lebih awal
+    // **1. Cek apakah pelanggan ada di sistem**
+    const customer = await Customer.findByPk(customer_id);
+    if (!customer) {
+      throw new Error(`Customer with ID ${customer_id} not found`);
+    }
+
+    // **2. Ambil total belanja pelanggan sebelum transaksi**
+    const totalSpentBefore = customer.total_spent || 0;
+
+    // **3. Simpan transaksi utama dengan harga sementara**
     await Transaction.create(
       {
         id: transactionId,
+        customer_id,
         sales_staff_id: salesStaffId,
-        total_price: 0, // Nanti di-update setelah hitung total harga
+        total_price: 0, // Akan diupdate nanti
+        discount: 0,
+        points_earned: 0,
       },
       { transaction }
     );
@@ -102,20 +119,20 @@ export const createTransaction = async (req, res) => {
         throw new Error(`Stock reduction failed for product ID ${product_id}`);
       }
 
-      // Simpan detail transaksi
+      // **4. Simpan detail transaksi**
       await TransactionDetail.create(
         {
           id: crypto.randomUUID(),
-          transaction_id: transactionId, // Sekarang sudah valid karena Transaction sudah dibuat
+          transaction_id: transactionId,
           product_id,
           quantity,
           sell_price_at_time: sellPriceAtTime,
-          batch_id: stockUsage[0].batch_id, // Ambil batch pertama
+          batch_id: stockUsage[0].batch_id,
         },
         { transaction }
       );
 
-      // Catat di StockHistory per batch yang terpakai
+      // **5. Catat di StockHistory**
       for (const batch of stockUsage) {
         await StockHistory.create(
           {
@@ -131,15 +148,116 @@ export const createTransaction = async (req, res) => {
       }
     }
 
-    // Update total price transaksi setelah semua produk diproses
+    // **6. Hitung total belanja pelanggan setelah transaksi**
+    const newTotalSpent = totalSpentBefore + totalPrice;
+
+    // **7. Tentukan level membership & diskon**
+    const membershipLevels = [
+      { level: "Default", minSpent: 0, discount: 0, pointsPer100k: 1 },
+      {
+        level: "Starter",
+        minSpent: 10_000_000,
+        discount: 0.005,
+        pointsPer100k: 1,
+      },
+      {
+        level: "Regular",
+        minSpent: 50_000_000,
+        discount: 0.01,
+        pointsPer100k: 1,
+      },
+      {
+        level: "Bronze",
+        minSpent: 100_000_000,
+        discount: 0.03,
+        pointsPer100k: 1,
+      },
+      {
+        level: "Silver",
+        minSpent: 300_000_000,
+        discount: 0.06,
+        pointsPer100k: 2,
+      },
+      {
+        level: "Gold",
+        minSpent: 500_000_000,
+        discount: 0.08,
+        pointsPer100k: 2,
+      },
+      {
+        level: "Platinum",
+        minSpent: 1_000_000_000,
+        discount: 0.1,
+        pointsPer100k: 2,
+      },
+    ];
+
+    const customerMembership = membershipLevels
+      .reverse()
+      .find((level) => newTotalSpent >= level.minSpent);
+
+    logger.info(
+      `Customer ${customer_id} has membership: ${
+        customerMembership.level
+      } with ${customerMembership.discount * 100}% discount`
+    );
+
+    // **8. Terapkan diskon dan hitung poin**
+    discount = totalPrice * customerMembership.discount;
+    finalPrice = totalPrice - discount;
+    pointsEarned =
+      Math.floor(finalPrice / 100_000) * customerMembership.pointsPer100k;
+
+    // **9. Update transaksi dengan nilai akhir**
     await Transaction.update(
-      { total_price: totalPrice },
+      { total_price: totalPrice, discount, points_earned: pointsEarned },
       { where: { id: transactionId }, transaction }
+    );
+
+    // **10. Update total belanja pelanggan & poin dalam tabel Customers**
+    await Customer.update(
+      {
+        total_spent: newTotalSpent,
+        last_transaction_at: new Date(),
+        points: sequelize.literal(`points + ${pointsEarned}`), // Tambah poin
+      },
+      { where: { id: customer_id }, transaction }
+    );
+
+    // **11. Simpan history poin pelanggan**
+    const latestPoints = await LoyaltyHistory.findOne({
+      where: { customer_id },
+      order: [["createdAt", "DESC"]],
+      transaction,
+    });
+
+    const totalPointsAfter = latestPoints
+      ? latestPoints.total_points_after + pointsEarned
+      : pointsEarned;
+
+    await LoyaltyHistory.create(
+      {
+        id: crypto.randomUUID(),
+        customer_id,
+        transaction_id: transactionId,
+        points_added: pointsEarned,
+        total_points_after: totalPointsAfter,
+        createdAt: new Date(),
+      },
+      { transaction }
     );
 
     await transaction.commit();
     logger.info(`Transaction committed successfully. ID: ${transactionId}`);
-    res.json({ message: "Transaction completed successfully", transactionId });
+
+    res.json({
+      message: "Transaction completed successfully",
+      transactionId,
+      total_price: totalPrice,
+      discount,
+      final_price: finalPrice,
+      points_earned: pointsEarned,
+    });
   } catch (error) {
     await transaction.rollback();
     logger.error(`Transaction failed: ${error.message}`);

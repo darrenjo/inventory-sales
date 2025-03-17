@@ -5,6 +5,8 @@ import "../models/product.js";
 import "../models/refund.js";
 import "../models/stockHistory.js";
 import "../models/user.js";
+import "../models/customer.js";
+import "../models/loyality.js";
 
 const syncDatabase = async () => {
   try {
