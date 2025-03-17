@@ -47,6 +47,10 @@ const Batch = sequelize.define("Batch", {
       key: "id",
     },
   }, // User ID yang melakukan perubahan
+  status: {
+    type: DataTypes.ENUM("new", "returned"), // Menandai batch retur
+    defaultValue: "new",
+  },
   date: { type: DataTypes.DATE, allowNull: false, defaultValue: Sequelize.NOW }, // Tanggal masuk
 });
 

@@ -1,5 +1,9 @@
 import sequelize from "../config/database.js";
 // Pastikan semua model diimport agar terdaftar
+import "../models/color.js";
+import "../models/product.js";
+import "../models/refund.js";
+import "../models/stockHistory.js";
 import "../models/user.js";
 
 const syncDatabase = async () => {
