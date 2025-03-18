@@ -1,7 +1,7 @@
-import { DataTypes } from "sequelize";
+import { Sequelize, DataTypes } from "sequelize";
 import sequelize from "../config/database.js";
 import Customer from "./customer.js";
-import { Transaction } from "./product.js";
+import { Transaction } from "./transaction.js";
 
 const LoyaltyHistory = sequelize.define(
   "LoyaltyHistory",
@@ -39,22 +39,16 @@ const LoyaltyHistory = sequelize.define(
       allowNull: false,
       defaultValue: 0,
     },
+    createdAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: Sequelize.NOW,
+    },
   },
   {
     tableName: "loyalty_history",
-    timestamps: true,
+    timestamps: false,
   }
 );
-
-Customer.hasMany(LoyaltyHistory, {
-  foreignKey: "customer_id",
-  onDelete: "CASCADE",
-});
-LoyaltyHistory.belongsTo(Customer, { foreignKey: "customer_id" });
-Transaction.hasOne(LoyaltyHistory, {
-  foreignKey: "transaction_id",
-  onDelete: "CASCADE",
-});
-LoyaltyHistory.belongsTo(Transaction, { foreignKey: "transaction_id" });
 
 export default LoyaltyHistory;

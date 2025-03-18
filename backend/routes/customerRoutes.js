@@ -1,4 +1,5 @@
 import express from "express";
+import { authenticateToken, authorizeRole } from "../middleware/auth.js";
 import {
   getCustomerById,
   addCustomer,
@@ -6,10 +7,18 @@ import {
 
 const router = express.Router();
 
-// ✅ Endpoint untuk ADD member baru
-router.post("/", addCustomer);
+router.post(
+  "/",
+  authenticateToken,
+  authorizeRole(["sales_staff", "superadmin"]),
+  addCustomer
+);
 
-// ✅ Endpoint untuk GET pelanggan berdasarkan ID
-router.get("/:customerId", getCustomerById);
+router.get(
+  "/:customerId",
+  authenticateToken,
+  authorizeRole(["sales_staff", "superadmin"]),
+  getCustomerById
+);
 
 export default router;

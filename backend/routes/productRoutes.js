@@ -1,4 +1,3 @@
-// routes/productRoutes.js
 import express from "express";
 import { authenticateToken, authorizeRole } from "../middleware/auth.js";
 import {
@@ -18,31 +17,42 @@ router.post(
   authorizeRole(["inventory_staff", "superadmin"]),
   createProduct
 );
+
 router.get("/", authenticateToken, getProducts);
+
 router.post(
   "/stock",
   authenticateToken,
   authorizeRole(["inventory_staff", "superadmin"]),
   addStock
 );
+
 router.delete(
   "/:id",
   authenticateToken,
   authorizeRole(["inventory_staff", "superadmin"]),
   deleteProduct
 );
+
 router.post(
   "/stock",
   authenticateToken,
   authorizeRole(["inventory_staff", "superadmin"]),
   addStock
 );
+
 router.post(
   "/reduce-stock",
   authenticateToken,
-  authorizeRole(["sales_staff", "superadmin"]),
+  authorizeRole(["inventory_staff", "superadmin"]),
   reduceStock
 );
-router.get("/:id/batches", authenticateToken, getBatchesByProduct);
+
+router.get(
+  "/:id/batches",
+  authenticateToken,
+  authorizeRole(["sales_staff", "inventory_staff", "superadmin"]),
+  getBatchesByProduct
+);
 
 export default router;

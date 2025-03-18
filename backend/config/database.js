@@ -1,5 +1,5 @@
 import { Sequelize } from "sequelize";
-import winston from "../utils/logger.js";
+import logger from "../utils/logger.js";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -32,7 +32,7 @@ const sequelize = new Sequelize(
 
 sequelize
   .authenticate()
-  .then(() => winston.info("Database connected"))
-  .catch((err) => winston.error("Database connection error:", err));
+  .then(() => logger.info("Database connected"))
+  .catch((err) => logger.error("Database connection error:", err));
 
 export default sequelize;

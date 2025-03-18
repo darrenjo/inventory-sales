@@ -1,5 +1,5 @@
-import Color from "../models/color.js";
-import winston from "../utils/logger.js";
+import { Color } from "../models/index.js";
+import logger from "../utils/logger.js";
 
 // ✅ Tambah Color Baru
 export const createColor = async (req, res) => {
@@ -14,10 +14,10 @@ export const createColor = async (req, res) => {
       by_who: user.id,
     });
 
-    winston.info(`Color created: ${color}, by User: ${user.username}`);
+    logger.info(`Color created: ${color}, by User: ${user.username}`);
     res.status(201).json({ message: "Color created", colorAdd });
   } catch (error) {
-    winston.error("Error creating color:", error);
+    logger.error("Error creating color:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
@@ -28,7 +28,7 @@ export const getColors = async (req, res) => {
     const colors = await Color.findAll();
     res.json(colors);
   } catch (error) {
-    winston.error("Error fetching colors:", error);
+    logger.error("Error fetching colors:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };

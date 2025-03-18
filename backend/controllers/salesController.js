@@ -3,18 +3,19 @@ import {
   Batch,
   TransactionDetail,
   Transaction,
-} from "../models/product.js";
-import winston from "../utils/logger.js";
-import { Op, fn, col, literal } from "sequelize";
-import sequelize from "../config/database.js"; // Gunakan transaksi SQL untuk keamanan
-import { reduceStockFIFO } from "../utils/reduceStockFIFO.js";
-import StockHistory from "../models/stockHistory.js";
+  StockHistory,
+  Refund,
+  Return,
+  Customer,
+  LoyaltyHistory,
+} from "../models/index.js";
 import logger from "../utils/logger.js";
-import Refund from "../models/refund.js";
-import Return from "../models/return.js";
-import Customer from "../models/customer.js";
-import LoyaltyHistory from "../models/loyality.js";
-import { generateBatchId } from "./productController.js";
+import { Op, fn, col, literal } from "sequelize";
+import sequelize from "../config/database.js";
+import { reduceStockFIFO } from "../utils/reduceStockFIFO.js";
+import { generateBatchId } from "../utils/generateBatchId.js";
+import { getMembershipLevel } from "../config/membership.js";
+import { calculateDiscountAndPoints } from "../utils/transactionUtils.js";
 
 export const getSalesProducts = async (req, res) => {
   try {
@@ -45,7 +46,7 @@ export const getSalesProducts = async (req, res) => {
 
     res.json(products);
   } catch (error) {
-    winston.error("Error fetching sales products:", error);
+    logger.error("Error fetching sales products:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
@@ -62,9 +63,6 @@ export const createTransaction = async (req, res) => {
   const transaction = await sequelize.transaction();
   try {
     let totalPrice = 0;
-    let discount = 0;
-    let finalPrice = 0;
-    let pointsEarned = 0;
 
     const transactionId = crypto.randomUUID(); // Generate UUID untuk transaksi
     logger.info(`Transaction started. ID: ${transactionId}`);
@@ -148,67 +146,15 @@ export const createTransaction = async (req, res) => {
       }
     }
 
-    // **6. Hitung total belanja pelanggan setelah transaksi**
-    const newTotalSpent = totalSpentBefore + totalPrice;
-
-    // **7. Tentukan level membership & diskon**
-    const membershipLevels = [
-      { level: "Default", minSpent: 0, discount: 0, pointsPer100k: 1 },
-      {
-        level: "Starter",
-        minSpent: 10_000_000,
-        discount: 0.005,
-        pointsPer100k: 1,
-      },
-      {
-        level: "Regular",
-        minSpent: 50_000_000,
-        discount: 0.01,
-        pointsPer100k: 1,
-      },
-      {
-        level: "Bronze",
-        minSpent: 100_000_000,
-        discount: 0.03,
-        pointsPer100k: 1,
-      },
-      {
-        level: "Silver",
-        minSpent: 300_000_000,
-        discount: 0.06,
-        pointsPer100k: 2,
-      },
-      {
-        level: "Gold",
-        minSpent: 500_000_000,
-        discount: 0.08,
-        pointsPer100k: 2,
-      },
-      {
-        level: "Platinum",
-        minSpent: 1_000_000_000,
-        discount: 0.1,
-        pointsPer100k: 2,
-      },
-    ];
-
-    const customerMembership = membershipLevels
-      .reverse()
-      .find((level) => newTotalSpent >= level.minSpent);
+    const { membership, discount, finalPrice, pointsEarned } =
+      calculateDiscountAndPoints(totalPrice, totalSpentBefore);
 
     logger.info(
-      `Customer ${customer_id} has membership: ${
-        customerMembership.level
-      } with ${customerMembership.discount * 100}% discount`
+      `Customer ${customer_id} has membership: ${membership.level} with ${
+        membership.discount * 100
+      }% discount`
     );
 
-    // **8. Terapkan diskon dan hitung poin**
-    discount = totalPrice * customerMembership.discount;
-    finalPrice = totalPrice - discount;
-    pointsEarned =
-      Math.floor(finalPrice / 100_000) * customerMembership.pointsPer100k;
-
-    // **9. Update transaksi dengan nilai akhir**
     await Transaction.update(
       { total_price: totalPrice, discount, points_earned: pointsEarned },
       { where: { id: transactionId }, transaction }
@@ -217,7 +163,7 @@ export const createTransaction = async (req, res) => {
     // **10. Update total belanja pelanggan & poin dalam tabel Customers**
     await Customer.update(
       {
-        total_spent: newTotalSpent,
+        total_spent: totalSpentBefore + totalPrice,
         last_transaction_at: new Date(),
         points: sequelize.literal(`points + ${pointsEarned}`), // Tambah poin
       },
@@ -345,13 +291,13 @@ export const processRefund = async (req, res) => {
     );
 
     await transaction.commit();
-    winston.info(
+    logger.info(
       `Refund processed: ${quantity} units of Product ID ${product_id} from Transaction ID ${transaction_id}`
     );
     res.json({ message: "Refund processed successfully" });
   } catch (error) {
     await transaction.rollback();
-    winston.error(`Error processing refund: ${error.message}`);
+    logger.error(`Error processing refund: ${error.message}`);
     res
       .status(500)
       .json({ error: `Error processing refund: ${error.message}` });
@@ -365,7 +311,7 @@ export const returnStock = async (req, res) => {
     const { transaction_id, product_id, quantity, reason } = req.body;
     const user = req.user;
 
-    winston.info(
+    logger.info(
       `Processing return: Transaction ${transaction_id}, Product ${product_id}, Quantity ${quantity}`
     );
 
@@ -397,7 +343,7 @@ export const returnStock = async (req, res) => {
     });
 
     if (!originalBatch) {
-      winston.warn(
+      logger.warn(
         `No original batch found for batch_id: ${transactionDetail.batch_id}`
       );
     }
@@ -419,7 +365,7 @@ export const returnStock = async (req, res) => {
     });
 
     if (!returnBatch) {
-      winston.info(`Creating new return batch for product ${product_id}`);
+      logger.info(`Creating new return batch for product ${product_id}`);
 
       returnBatch = await Batch.create(
         {
@@ -464,7 +410,7 @@ export const returnStock = async (req, res) => {
     );
 
     await transaction.commit();
-    winston.info(
+    logger.info(
       `Product ${product_id} returned successfully: ${quantity} units`
     );
     res
@@ -472,7 +418,7 @@ export const returnStock = async (req, res) => {
       .json({ message: "Return processed successfully", newReturn });
   } catch (error) {
     await transaction.rollback();
-    winston.error("Error processing return:", error);
+    logger.error("Error processing return:", error);
     res
       .status(500)
       .json({ error: "Internal Server Error", details: error.message });

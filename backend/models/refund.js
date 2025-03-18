@@ -1,66 +1,60 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/database.js";
 import User from "./user.js";
-import { Product, Transaction } from "./product.js";
+import { Product } from "./product.js";
+import { Transaction } from "./transaction.js";
 
-const Refund = sequelize.define("Refund", {
-  id: {
-    type: DataTypes.UUID,
-    defaultValue: DataTypes.UUIDV4,
-    primaryKey: true,
-  },
-  transaction_id: {
-    type: DataTypes.UUID,
-    allowNull: false,
-    references: {
-      model: Transaction,
-      key: "id",
+const Refund = sequelize.define(
+  "Refund",
+  {
+    id: {
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
+      primaryKey: true,
     },
-    onDelete: "CASCADE",
-  },
-  product_id: {
-    type: DataTypes.UUID,
-    allowNull: false,
-    references: {
-      model: Product,
-      key: "id",
+    transaction_id: {
+      type: DataTypes.UUID,
+      allowNull: false,
+      references: {
+        model: Transaction,
+        key: "id",
+      },
+      onDelete: "CASCADE",
     },
-    onDelete: "CASCADE",
-  },
-  quantity: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-  },
-  refund_amount: {
-    type: DataTypes.FLOAT,
-    allowNull: false,
-  },
-  refunded_by: {
-    type: DataTypes.UUID,
-    allowNull: false,
-    references: {
-      model: User,
-      key: "id",
+    product_id: {
+      type: DataTypes.UUID,
+      allowNull: false,
+      references: {
+        model: Product,
+        key: "id",
+      },
+      onDelete: "CASCADE",
     },
-    onDelete: "SET NULL",
+    quantity: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    refund_amount: {
+      type: DataTypes.FLOAT,
+      allowNull: false,
+    },
+    refunded_by: {
+      type: DataTypes.UUID,
+      allowNull: false,
+      references: {
+        model: User,
+        key: "id",
+      },
+      onDelete: "SET NULL",
+    },
+    refunded_at: {
+      type: DataTypes.DATE,
+      defaultValue: DataTypes.NOW,
+    },
   },
-  refunded_at: {
-    type: DataTypes.DATE,
-    defaultValue: DataTypes.NOW,
-  },
-});
-
-// 🔗 Relasi
-Transaction.hasMany(Refund, { foreignKey: "transaction_id", as: "refunds" });
-Refund.belongsTo(Transaction, {
-  foreignKey: "transaction_id",
-  as: "transaction",
-});
-
-Product.hasMany(Refund, { foreignKey: "product_id", as: "refunds" });
-Refund.belongsTo(Product, { foreignKey: "product_id", as: "product" });
-
-User.hasMany(Refund, { foreignKey: "refunded_by", as: "refunds" });
-Refund.belongsTo(User, { foreignKey: "refunded_by", as: "refundedBy" });
+  {
+    timestamps: false,
+  }
+);
 
 export default Refund;

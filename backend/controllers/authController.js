@@ -1,15 +1,15 @@
-import User from "../models/user.js";
+import { User } from "../models/index.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
-import winston from "../utils/logger.js";
+import logger from "../utils/logger.js";
 
 export const register = async (req, res) => {
   try {
     const { username, password, role } = req.body;
     const user = await User.create({ username, password, role });
-    res.status(201).json({ message: "User registered", user });
+    res.status(201).json({ message: "User registered" });
   } catch (error) {
-    winston.error("Error registering user:", error);
+    logger.error("Error registering user:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
@@ -25,7 +25,7 @@ export const login = async (req, res) => {
     const token = jwt.sign(
       { id: user.id, username: user.username, role: user.role },
       process.env.JWT_SECRET,
-      { expiresIn: "1d" } // FOR DEVELOPMENT PURPOSES ONLY
+      { expiresIn: "1h" } // FOR DEVELOPMENT PURPOSES ONLY
     );
     res.json({
       message: "Login successful",
@@ -37,7 +37,7 @@ export const login = async (req, res) => {
       },
     });
   } catch (error) {
-    winston.error("Error logging in:", error);
+    logger.error("Error logging in:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };

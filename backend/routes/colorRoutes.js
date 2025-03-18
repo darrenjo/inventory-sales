@@ -9,6 +9,7 @@ router.get(
   authorizeRole(["inventory_staff", "sales_staff", "superadmin"]),
   getColors
 );
+
 router.post(
   "/",
   authenticateToken,

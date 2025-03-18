@@ -1,5 +1,5 @@
-import Customer from "../models/customer.js";
-import logger from "../utils/logger.js"; // Pakai Winston untuk logging
+import { Customer } from "../models/index.js";
+import logger from "../utils/logger.js";
 
 // ✅ Controller: Ambil data pelanggan berdasarkan ID
 export const getCustomerById = async (req, res) => {

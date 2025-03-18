@@ -6,9 +6,8 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import compression from "compression";
-import winston from "./utils/logger.js";
-import syncDatabase from "./utils/syncDatabase.js";
-import sequelize from "./config/database.js";
+import logger from "./utils/logger.js";
+import { syncDatabase } from "./models/index.js";
 import userRoutes from "./routes/userRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
@@ -25,7 +24,7 @@ app.use(express.json());
 
 app.use((req, res, next) => {
   res.on("finish", () => {
-    winston.info(`${req.method} ${req.originalUrl} - ${res.statusCode}`);
+    logger.req(`${req.method} ${req.originalUrl} - ${res.statusCode}`);
   });
   next();
 });
@@ -48,7 +47,7 @@ const PORT = process.env.PORT || 5000;
 
 const startServer = async () => {
   await syncDatabase();
-  app.listen(PORT, () => winston.info(`Server running on port ${PORT}`));
+  app.listen(PORT, () => logger.info(`Server running on port ${PORT}`));
 };
 
 startServer();

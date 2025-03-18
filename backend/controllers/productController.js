@@ -1,13 +1,12 @@
-import { Product, Batch } from "../models/product.js";
-import Color from "../models/color.js";
-import StockHistory from "../models/stockHistory.js";
-import winston from "../utils/logger.js";
+import { Product, Batch, Color, StockHistory } from "../models/index.js";
+import logger from "../utils/logger.js";
 import { Op } from "sequelize";
+import { generateBatchId } from "../utils/generateBatchId.js";
 
 // Tambah Produk Baru
 export const createProduct = async (req, res) => {
   try {
-    const { name, category, color_code } = req.body;
+    const { name, category, color_code, sell_price } = req.body;
     const user = req.user; // Ambil data user dari middleware autentikasi
 
     // Validasi apakah kode warna ada di tabel Color
@@ -27,13 +26,14 @@ export const createProduct = async (req, res) => {
       name,
       category,
       color_code,
+      sell_price,
       by_who: user.id,
     });
 
-    winston.info(`Product created: ${name} by User: ${user.username}`);
+    logger.info(`Product created: ${name} by User: ${user.username}`);
     res.status(201).json({ message: "Product created", product });
   } catch (error) {
-    winston.error("Error creating product:", error);
+    logger.error("Error creating product:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
@@ -62,13 +62,13 @@ export const addStock = async (req, res) => {
       by_who: user.id,
     });
 
-    winston.info(
+    logger.info(
       `Stock added: ${quantity} units to ${product.name} (Batch: ${batch.id}) by User: ${user.username}`
     );
 
     res.status(201).json({ message: "Stock added", batch });
   } catch (error) {
-    winston.error("Error adding stock:", error);
+    logger.error("Error adding stock:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
@@ -79,7 +79,7 @@ export const getProducts = async (req, res) => {
     const products = await Product.findAll({ include: Batch });
     res.json(products);
   } catch (error) {
-    winston.error("Error fetching products:", error);
+    logger.error("Error fetching products:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
@@ -98,12 +98,12 @@ export const deleteProduct = async (req, res) => {
 
     await Product.destroy({ where: { id } });
 
-    winston.info(
+    logger.info(
       `Product ${product.name} ${product.category} ${product.color_code} deleted by User: ${user.username}`
     );
     res.json({ message: "Product deleted" });
   } catch (error) {
-    winston.error("Error deleting product:", error);
+    logger.error("Error deleting product:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
@@ -121,7 +121,7 @@ export const reduceStock = async (req, res) => {
     // Ambil batch dengan stok > 0 (FIFO)
     const batches = await Batch.findAll({
       where: { product_id, quantity: { [Op.gt]: 0 } }, // Hanya batch yang masih ada stok
-      order: [["date", "ASC"]],
+      order: [["createdAt", "ASC"]],
     });
 
     if (!batches || batches.length === 0) {
@@ -143,7 +143,7 @@ export const reduceStock = async (req, res) => {
         price_per_unit: batch.price,
         quantity: -deducted, // Simpan histori pengurangan stok
         by_who: user.id,
-        date: new Date(),
+        createdAt: new Date(),
       });
 
       batch.quantity -= deducted;
@@ -159,13 +159,13 @@ export const reduceStock = async (req, res) => {
       return res.status(400).json({ error: "Not enough stock" });
     }
 
-    winston.info(
+    logger.info(
       `Stock reduced: ${quantity} units from Product ID: ${product_id} by User: ${user.username}`
     );
 
     res.json({ message: "Stock reduced successfully", updatedBatches });
   } catch (error) {
-    winston.error("Error reducing stock:", error);
+    logger.error("Error reducing stock:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
@@ -176,7 +176,7 @@ export const getBatchesByProduct = async (req, res) => {
     const batches = await Batch.findAll({ where: { product_id: id } });
     res.json(batches);
   } catch (error) {
-    winston.error("Error fetching batches:", error);
+    logger.error("Error fetching batches:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
@@ -184,13 +184,4 @@ export const getBatchesByProduct = async (req, res) => {
 const getBatchStock = async (batchId) => {
   const totalStock = await Batch.sum("quantity", { where: { id: batchId } });
   return totalStock || 0; // Jika tidak ada, return 0
-};
-
-export const generateBatchId = (productName, productId) => {
-  const currentYear = new Date().getFullYear().toString().slice(-2); // 25
-  const currentMonth = String(new Date().getMonth() + 1).padStart(2, "0"); // 03
-  const shortName = productName.substring(0, 3).toUpperCase(); // KAT
-  const timestamp = Math.floor(Date.now() / 1000); // Detik UNIX
-
-  return `${shortName}${currentYear}_${currentMonth}${timestamp}`;
 };

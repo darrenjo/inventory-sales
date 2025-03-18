@@ -1,14 +1,8 @@
 import { Op } from "sequelize";
 import { Batch } from "../models/product.js";
-import StockHistory from "../models/stockHistory.js";
 import logger from "./logger.js";
 
-export const reduceStockFIFO = async (
-  product_id,
-  quantity,
-  transaction,
-  userId
-) => {
+export const reduceStockFIFO = async (product_id, quantity, transaction) => {
   logger.info(
     `Starting FIFO stock reduction - Product: ${product_id}, Quantity: ${quantity}`
   );
