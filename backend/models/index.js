@@ -10,6 +10,9 @@ import "./return.js";
 import "./stockHistory.js";
 import "./user.js";
 import "./transaction.js";
+import "./role.js";
+import "./permission.js";
+import "./rolePermission.js";
 
 import Color from "./color.js";
 import Customer from "./customer.js";
@@ -20,6 +23,11 @@ import Return from "./return.js";
 import StockHistory from "./stockHistory.js";
 import User from "./user.js";
 import { Transaction, TransactionDetail } from "./transaction.js";
+import Role from "./role.js";
+import Permission from "./permission.js";
+import RolePermission from "./rolePermission.js";
+
+User.belongsTo(Role, { foreignKey: "roleId", as: "role" });
 
 User.hasMany(Color, { foreignKey: "by_who" });
 Color.belongsTo(User, { foreignKey: "by_who" });
@@ -93,9 +101,22 @@ Customer.hasMany(Transaction, {
 });
 Transaction.belongsTo(Customer, { foreignKey: "customer_id" });
 
+// Relasi Many-to-Many Role <-> Permission
+Role.belongsToMany(Permission, {
+  through: RolePermission,
+  foreignKey: "roleId",
+});
+Permission.belongsToMany(Role, {
+  through: RolePermission,
+  foreignKey: "permissionId",
+});
+
+RolePermission.belongsTo(Role, { foreignKey: "roleId" });
+RolePermission.belongsTo(Permission, { foreignKey: "permissionId" });
+
 const syncDatabase = async () => {
   try {
-    await sequelize.sync({ alter: true });
+    await sequelize.sync({ alter: true, force: false });
     logger.info("✅ Database synced successfully");
   } catch (error) {
     logger.error(`❌ Error syncing database: ${error.message}`);
@@ -116,4 +137,7 @@ export {
   Transaction,
   TransactionDetail,
   syncDatabase,
+  Role,
+  Permission,
+  RolePermission,
 };

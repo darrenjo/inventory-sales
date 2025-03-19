@@ -1,6 +1,7 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/database.js";
 import bcrypt from "bcryptjs";
+import Role from "./role.js";
 
 const User = sequelize.define("User", {
   id: {
@@ -10,9 +11,13 @@ const User = sequelize.define("User", {
   },
   username: { type: DataTypes.STRING, allowNull: false, unique: true },
   password: { type: DataTypes.STRING, allowNull: false },
-  role: {
-    type: DataTypes.ENUM("superadmin", "inventory_staff", "sales_staff"),
+  roleId: {
+    type: DataTypes.INTEGER,
     allowNull: false,
+    references: {
+      model: Role,
+      key: "id",
+    },
   },
 });
 

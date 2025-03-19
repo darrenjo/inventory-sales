@@ -5,8 +5,8 @@ import logger from "../utils/logger.js";
 
 export const register = async (req, res) => {
   try {
-    const { username, password, role } = req.body;
-    const user = await User.create({ username, password, role });
+    const { username, password, roleId } = req.body;
+    const user = await User.create({ username, password, roleId });
     res.status(201).json({ message: "User registered" });
   } catch (error) {
     logger.error("Error registering user:", error);
@@ -23,11 +23,11 @@ export const login = async (req, res) => {
     }
 
     const token = jwt.sign(
-      { id: user.id, username: user.username, role: user.role },
+      { id: user.id, username: user.username, roleId: user.roleId },
       process.env.JWT_SECRET,
       { expiresIn: "1h" } // FOR DEVELOPMENT PURPOSES ONLY
     );
-    res.json({
+    res.status(200).json({
       message: "Login successful",
       token,
       user: {

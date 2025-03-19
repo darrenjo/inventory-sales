@@ -1,19 +1,15 @@
 import express from "express";
 import { getColors, createColor } from "../controllers/colorController.js";
-import { authenticateToken, authorizeRole } from "../middleware/auth.js";
+import { authenticateToken } from "../middleware/auth.js";
+import { authorizePermission } from "../middleware/authPermission.js";
 
 const router = express.Router();
-router.get(
-  "/",
-  authenticateToken,
-  authorizeRole(["inventory_staff", "sales_staff", "superadmin"]),
-  getColors
-);
+router.get("/", authenticateToken, getColors);
 
 router.post(
   "/",
   authenticateToken,
-  authorizeRole(["inventory_staff", "superadmin"]),
+  authorizePermission("manage_products"),
   createColor
 );
 

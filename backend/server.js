@@ -14,6 +14,8 @@ import productRoutes from "./routes/productRoutes.js";
 import colorRoutes from "./routes/colorRoutes.js";
 import salesRoutes from "./routes/salesRoutes.js";
 import customerRoutes from "./routes/customerRoutes.js";
+import roleRoutes from "./routes/roleRoutes.js";
+import permissionRoutes from "./routes/permissionRoutes.js";
 
 // Initialize Express
 const app = express();
@@ -36,6 +38,8 @@ app.use("/api/products", productRoutes);
 app.use("/api/colors", colorRoutes);
 app.use("/api/sales", salesRoutes);
 app.use("/api/customers", customerRoutes);
+app.use("/api/roles", roleRoutes);
+app.use("/api/permissions", permissionRoutes);
 
 // Basic Route
 app.get("/", (req, res) => {

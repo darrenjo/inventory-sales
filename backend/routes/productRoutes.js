@@ -1,5 +1,6 @@
 import express from "express";
-import { authenticateToken, authorizeRole } from "../middleware/auth.js";
+import { authenticateToken } from "../middleware/auth.js";
+import { authorizePermission } from "../middleware/authPermission.js";
 import {
   createProduct,
   getProducts,
@@ -11,10 +12,17 @@ import {
 
 const router = express.Router();
 
+// router.post(
+//   "/",
+//   authenticateToken,
+//   authorizeRole(["inventory_staff", "superadmin"]),
+//   createProduct
+// );
+
 router.post(
   "/",
   authenticateToken,
-  authorizeRole(["inventory_staff", "superadmin"]),
+  authorizePermission("manage_products"),
   createProduct
 );
 
@@ -23,36 +31,31 @@ router.get("/", authenticateToken, getProducts);
 router.post(
   "/stock",
   authenticateToken,
-  authorizeRole(["inventory_staff", "superadmin"]),
+  authorizePermission("manage_stock"),
   addStock
 );
 
 router.delete(
   "/:id",
   authenticateToken,
-  authorizeRole(["inventory_staff", "superadmin"]),
+  authorizePermission("manage_stock"),
   deleteProduct
 );
 
 router.post(
   "/stock",
   authenticateToken,
-  authorizeRole(["inventory_staff", "superadmin"]),
+  authorizePermission("manage_stock"),
   addStock
 );
 
 router.post(
   "/reduce-stock",
   authenticateToken,
-  authorizeRole(["inventory_staff", "superadmin"]),
+  authorizePermission("manage_stock"),
   reduceStock
 );
 
-router.get(
-  "/:id/batches",
-  authenticateToken,
-  authorizeRole(["sales_staff", "inventory_staff", "superadmin"]),
-  getBatchesByProduct
-);
+router.get("/:id/batches", authenticateToken, getBatchesByProduct);
 
 export default router;

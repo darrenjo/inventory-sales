@@ -1,5 +1,6 @@
 import express from "express";
-import { authenticateToken, authorizeRole } from "../middleware/auth.js";
+import { authenticateToken } from "../middleware/auth.js";
+import { authorizePermission } from "../middleware/authPermission.js";
 import {
   getSalesProducts,
   createTransaction,
@@ -12,28 +13,28 @@ const router = express.Router();
 router.get(
   "/products",
   authenticateToken,
-  authorizeRole(["sales_staff", "superadmin"]),
+  authorizePermission("manage_sales"),
   getSalesProducts
 );
 
 router.post(
   "/transactions",
   authenticateToken,
-  authorizeRole(["sales_staff", "superadmin"]),
+  authorizePermission("manage_sales"),
   createTransaction
 );
 
 router.post(
   "/refund",
   authenticateToken,
-  authorizeRole(["sales_staff", "superadmin"]),
+  authorizePermission("manage_sales"),
   processRefund
 );
 
 router.post(
   "/return",
   authenticateToken,
-  authorizeRole(["sales_staff", "superadmin"]),
+  authorizePermission("manage_sales"),
   returnStock
 );
 
