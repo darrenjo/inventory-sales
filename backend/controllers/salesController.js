@@ -1,3 +1,9 @@
+import logger from "../utils/logger.js";
+import { Op, fn, col, QueryTypes } from "sequelize";
+import sequelize from "../config/database.js";
+import { reduceStockFIFO } from "../utils/reduceStockFIFO.js";
+import { generateBatchId } from "../utils/generateBatchId.js";
+import { calculateDiscountAndPoints } from "../utils/transactionUtils.js";
 import {
   Product,
   Batch,
@@ -9,14 +15,8 @@ import {
   Customer,
   LoyaltyHistory,
 } from "../models/index.js";
-import logger from "../utils/logger.js";
-import { Op, fn, col, literal } from "sequelize";
-import sequelize from "../config/database.js";
-import { reduceStockFIFO } from "../utils/reduceStockFIFO.js";
-import { generateBatchId } from "../utils/generateBatchId.js";
-import { getMembershipLevel } from "../config/membership.js";
-import { calculateDiscountAndPoints } from "../utils/transactionUtils.js";
 
+// ✅ get sales products
 export const getSalesProducts = async (req, res) => {
   try {
     const products = await Product.findAll({
@@ -51,6 +51,7 @@ export const getSalesProducts = async (req, res) => {
   }
 };
 
+// ✅ create transaction
 export const createTransaction = async (req, res) => {
   const { sales, customer_id } = req.body; // sales: [{ product_id, quantity }]
   const salesStaffId = req.user.id; // Ambil ID Sales Staff dari token
@@ -67,22 +68,26 @@ export const createTransaction = async (req, res) => {
     const transactionId = crypto.randomUUID(); // Generate UUID untuk transaksi
     logger.info(`Transaction started. ID: ${transactionId}`);
 
-    // **1. Cek apakah pelanggan ada di sistem**
-    const customer = await Customer.findByPk(customer_id);
-    if (!customer) {
-      throw new Error(`Customer with ID ${customer_id} not found`);
+    // 1. Cek apakah pelanggan ada di sistem (Opsional)
+    let customer = null;
+    if (customer_id) {
+      customer = await Customer.findByPk(customer_id);
+      if (!customer) {
+        return res
+          .status(400)
+          .json({ error: `Customer with ID ${customer_id} not found` });
+      }
     }
+    // 2. Ambil total belanja pelanggan sebelum transaksi
+    const totalSpentBefore = customer ? customer.total_spent || 0 : 0;
 
-    // **2. Ambil total belanja pelanggan sebelum transaksi**
-    const totalSpentBefore = customer.total_spent || 0;
-
-    // **3. Simpan transaksi utama dengan harga sementara**
+    // 3. Simpan transaksi utama dengan harga sementara
     await Transaction.create(
       {
         id: transactionId,
-        customer_id,
+        customer_id: customer ? customer.id : null,
         sales_staff_id: salesStaffId,
-        total_price: 0, // Akan diupdate nanti
+        total_price: 0, // Harga sementara
         discount: 0,
         points_earned: 0,
       },
@@ -117,7 +122,7 @@ export const createTransaction = async (req, res) => {
         throw new Error(`Stock reduction failed for product ID ${product_id}`);
       }
 
-      // **4. Simpan detail transaksi**
+      // 4. Simpan detail transaksi
       await TransactionDetail.create(
         {
           id: crypto.randomUUID(),
@@ -130,7 +135,7 @@ export const createTransaction = async (req, res) => {
         { transaction }
       );
 
-      // **5. Catat di StockHistory**
+      // 5. Catat di StockHistory
       for (const batch of stockUsage) {
         await StockHistory.create(
           {
@@ -146,8 +151,24 @@ export const createTransaction = async (req, res) => {
       }
     }
 
-    const { membership, discount, finalPrice, pointsEarned } =
-      calculateDiscountAndPoints(totalPrice, totalSpentBefore);
+    let membership = { level: "Regular", discount: 0 };
+    let discount = 0;
+    let finalPrice = totalPrice;
+    let pointsEarned = 0;
+
+    // 6. Hitung diskon dan poin hanya jika customer ada
+    if (customer) {
+      ({ membership, discount, finalPrice, pointsEarned } =
+        calculateDiscountAndPoints(totalPrice, totalSpentBefore));
+      logger.info(
+        `Customer ${customer_id} has membership: ${membership.level} with ${
+          membership.discount * 100
+        }% discount`
+      );
+    }
+
+    // const { membership, discount, finalPrice, pointsEarned } =
+    //   calculateDiscountAndPoints(totalPrice, totalSpentBefore);
 
     logger.info(
       `Customer ${customer_id} has membership: ${membership.level} with ${
@@ -160,38 +181,39 @@ export const createTransaction = async (req, res) => {
       { where: { id: transactionId }, transaction }
     );
 
-    // **10. Update total belanja pelanggan & poin dalam tabel Customers**
-    await Customer.update(
-      {
-        total_spent: totalSpentBefore + totalPrice,
-        last_transaction_at: new Date(),
-        points: sequelize.literal(`points + ${pointsEarned}`), // Tambah poin
-      },
-      { where: { id: customer_id }, transaction }
-    );
+    if (customer) {
+      await Customer.update(
+        {
+          total_spent: totalSpentBefore + totalPrice,
+          last_transaction_at: new Date(),
+          points: sequelize.literal(`points + ${pointsEarned}`), // Tambah poin
+        },
+        { where: { id: customer_id }, transaction }
+      );
 
-    // **11. Simpan history poin pelanggan**
-    const latestPoints = await LoyaltyHistory.findOne({
-      where: { customer_id },
-      order: [["createdAt", "DESC"]],
-      transaction,
-    });
+      // 7. Simpan history poin pelanggan
+      const latestPoints = await LoyaltyHistory.findOne({
+        where: { customer_id },
+        order: [["createdAt", "DESC"]],
+        transaction,
+      });
 
-    const totalPointsAfter = latestPoints
-      ? latestPoints.total_points_after + pointsEarned
-      : pointsEarned;
+      const totalPointsAfter = latestPoints
+        ? latestPoints.total_points_after + pointsEarned
+        : pointsEarned;
 
-    await LoyaltyHistory.create(
-      {
-        id: crypto.randomUUID(),
-        customer_id,
-        transaction_id: transactionId,
-        points_added: pointsEarned,
-        total_points_after: totalPointsAfter,
-        createdAt: new Date(),
-      },
-      { transaction }
-    );
+      await LoyaltyHistory.create(
+        {
+          id: crypto.randomUUID(),
+          customer_id,
+          transaction_id: transactionId,
+          points_added: pointsEarned,
+          total_points_after: totalPointsAfter,
+          createdAt: new Date(),
+        },
+        { transaction }
+      );
+    }
 
     await transaction.commit();
     logger.info(`Transaction committed successfully. ID: ${transactionId}`);
@@ -213,7 +235,7 @@ export const createTransaction = async (req, res) => {
   }
 };
 
-// Proses REFUND (Barang dikembalikan & uang dikembalikan)
+// ✅ Proses REFUND (Barang dikembalikan & uang dikembalikan)
 export const processRefund = async (req, res) => {
   const { transaction_id, product_id, quantity } = req.body;
   const user = req.user;
@@ -304,7 +326,7 @@ export const processRefund = async (req, res) => {
   }
 };
 
-// Proses Retur Barang (Mengembalikan ke Stok)
+// ✅ Proses Retur Barang (Mengembalikan ke Stok)
 export const returnStock = async (req, res) => {
   const transaction = await sequelize.transaction();
   try {
@@ -372,7 +394,7 @@ export const returnStock = async (req, res) => {
           id: returnBatchId,
           product_id,
           price: batchPrice,
-          quantity: 0, // Awalnya 0, akan ditambahkan
+          quantity: 0,
           by_who: user.id,
           status: "returned",
         },
@@ -422,5 +444,112 @@ export const returnStock = async (req, res) => {
     res
       .status(500)
       .json({ error: "Internal Server Error", details: error.message });
+  }
+};
+
+export const getSalesSummary = async (req, res) => {
+  try {
+    const { range } = req.query;
+
+    // Validasi range yang diperbolehkan
+    const allowedRanges = ["daily", "monthly", "yearly"];
+    if (!allowedRanges.includes(range)) {
+      return res.status(400).json({ error: "Invalid range parameter" });
+    }
+
+    // Mapping range ke format PostgreSQL DATE_TRUNC
+    const dateTruncFormat = {
+      daily: "day",
+      monthly: "month",
+      yearly: "year",
+    };
+
+    const salesData = await sequelize.query(
+      `
+      SELECT DATE_TRUNC(:rangeType, "createdAt") AS date, SUM("total_price") AS total_sales
+      FROM "transactions"
+      GROUP BY date
+      ORDER BY date;
+      `,
+      {
+        type: QueryTypes.SELECT,
+        replacements: { rangeType: dateTruncFormat[range] },
+      }
+    );
+
+    res.json({ range, data: salesData });
+  } catch (error) {
+    logger.error(`❌ Error fetching sales summary: ${error.message}`);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+export const getSalesByCategory = async (req, res) => {
+  try {
+    const { range } = req.query;
+    const allowedRanges = ["daily", "monthly", "yearly"];
+    const dateTruncFormat = {
+      daily: "day",
+      monthly: "month",
+      yearly: "year",
+    };
+
+    // Default ke monthly jika tidak ada range
+    const rangeType = allowedRanges.includes(range)
+      ? dateTruncFormat[range]
+      : "month";
+
+    const salesData = await sequelize.query(
+      `
+      SELECT DATE_TRUNC(:rangeType, t."createdAt") AS date, 
+             p."name" AS category, 
+             SUM(td."sell_price_at_time" * td."quantity") AS total_sales
+      FROM "transaction_details" td
+      JOIN "Products" p ON td."product_id" = p."id"
+      JOIN "transactions" t ON td."transaction_id" = t."id"
+      GROUP BY date, p."name"
+      ORDER BY date;
+      `,
+      {
+        type: QueryTypes.SELECT,
+        replacements: { rangeType },
+      }
+    );
+
+    res.json({ range: range || "monthly", data: salesData });
+  } catch (error) {
+    logger.error(`❌ Error fetching sales by category: ${error.message}`);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+export const getSalesByStaff = async (req, res) => {
+  try {
+    const { rangeType } = req.query; // day, week, month
+
+    const salesData = await sequelize.query(
+      `
+      SELECT DATE_TRUNC(:rangeType, t."createdAt") AS date, 
+             u."username" AS sales_staff, 
+             SUM(td."sell_price_at_time" * td."quantity") AS total_sales
+      FROM "transaction_details" td
+      JOIN "transactions" t ON td."transaction_id" = t."id"
+      JOIN "Users" u ON t."sales_staff_id" = u."id"
+      GROUP BY date, u."username"
+      ORDER BY date;
+      `,
+      {
+        type: QueryTypes.SELECT,
+        replacements: { rangeType },
+      }
+    );
+
+    res.json({
+      message: "Sales by staff fetched successfully",
+      data: salesData,
+    });
+  } catch (error) {
+    logger.error("❌ Error fetching sales by staff: " + error.message);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 };

@@ -1,7 +1,7 @@
 import { Color } from "../models/index.js";
 import logger from "../utils/logger.js";
 
-// ✅ Tambah Color Baru
+// ✅ Add Color
 export const createColor = async (req, res) => {
   try {
     const { color_code, fabric_type, color } = req.body;
@@ -22,7 +22,7 @@ export const createColor = async (req, res) => {
   }
 };
 
-// ✅ Lihat Semua Color
+// ✅ Get All Colors
 export const getColors = async (req, res) => {
   try {
     const colors = await Color.findAll();

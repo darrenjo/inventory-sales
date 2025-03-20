@@ -3,7 +3,7 @@ import logger from "../utils/logger.js";
 import { Op } from "sequelize";
 import { generateBatchId } from "../utils/generateBatchId.js";
 
-// Tambah Produk Baru
+// ✅ Add Product
 export const createProduct = async (req, res) => {
   try {
     const { name, category, color_code, sell_price } = req.body;
@@ -38,7 +38,7 @@ export const createProduct = async (req, res) => {
   }
 };
 
-// Tambah Stok (Batch Baru)
+// ✅ add stock (new batch)
 export const addStock = async (req, res) => {
   try {
     const { product_id, price, quantity } = req.body;
@@ -73,10 +73,11 @@ export const addStock = async (req, res) => {
   }
 };
 
-// Lihat Semua Produk
+// ✅ Get All Products
 export const getProducts = async (req, res) => {
   try {
     const products = await Product.findAll({ include: Batch });
+
     res.json(products);
   } catch (error) {
     logger.error("Error fetching products:", error);
@@ -84,7 +85,7 @@ export const getProducts = async (req, res) => {
   }
 };
 
-// Hapus Produk
+// ✅ delete product
 export const deleteProduct = async (req, res) => {
   try {
     const { id } = req.params;
@@ -108,7 +109,7 @@ export const deleteProduct = async (req, res) => {
   }
 };
 
-// FIFO: Kurangi Stok
+// ✅ FIFO: Reduce Stock
 export const reduceStock = async (req, res) => {
   try {
     const { product_id, quantity } = req.body;
@@ -170,18 +171,15 @@ export const reduceStock = async (req, res) => {
   }
 };
 
+// ✅ Get Batches by Product ID
 export const getBatchesByProduct = async (req, res) => {
   try {
     const { id } = req.params;
+
     const batches = await Batch.findAll({ where: { product_id: id } });
     res.json(batches);
   } catch (error) {
     logger.error("Error fetching batches:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
-};
-
-const getBatchStock = async (batchId) => {
-  const totalStock = await Batch.sum("quantity", { where: { id: batchId } });
-  return totalStock || 0; // Jika tidak ada, return 0
 };

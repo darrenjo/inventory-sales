@@ -6,7 +6,11 @@ import {
   createTransaction,
   processRefund,
   returnStock,
+  getSalesSummary,
+  getSalesByCategory,
+  getSalesByStaff,
 } from "../controllers/salesController.js";
+import { getCustomerLoyaltyStats } from "../controllers/customerController.js";
 
 const router = express.Router();
 
@@ -36,6 +40,16 @@ router.post(
   authenticateToken,
   authorizePermission("manage_sales"),
   returnStock
+);
+
+router.get("/summary", authenticateToken, getSalesSummary);
+
+router.get("/category-summary", authenticateToken, getSalesByCategory);
+router.get("/sales-by-staff", authenticateToken, getSalesByStaff);
+router.get(
+  "/customer-loyalty-stats",
+  authenticateToken,
+  getCustomerLoyaltyStats
 );
 
 export default router;

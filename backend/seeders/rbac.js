@@ -28,12 +28,14 @@ const seedRolesAndPermissions = async () => {
       { roleId: 1, permissionId: 3 }, // Superadmin - Manage Products
       { roleId: 1, permissionId: 4 }, // Superadmin - Manage Products
       { roleId: 1, permissionId: 5 }, // Superadmin - Manage Sales
+      { roleId: 1, permissionId: 6 }, // Superadmin - Manage Customer
 
       { roleId: 2, permissionId: 1 }, // Owner - Manage Users
       { roleId: 2, permissionId: 2 }, // Owner - Manage Roles
       { roleId: 2, permissionId: 3 }, // Owner - Manage Products
       { roleId: 2, permissionId: 4 }, // Owner - Manage Products
       { roleId: 2, permissionId: 5 }, // Owner - Manage Sales
+      { roleId: 2, permissionId: 6 }, // Superadmin - Manage Customer
 
       { roleId: 3, permissionId: 3 }, // Inventory Staff - Manage Products
       { roleId: 3, permissionId: 4 }, // Inventory Staff - Manage Stock

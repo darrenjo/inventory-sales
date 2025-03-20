@@ -3,10 +3,13 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import logger from "../utils/logger.js";
 
+// ✅ Register User
 export const register = async (req, res) => {
   try {
     const { username, password, roleId } = req.body;
+
     const user = await User.create({ username, password, roleId });
+
     res.status(201).json({ message: "User registered" });
   } catch (error) {
     logger.error("Error registering user:", error);
@@ -14,9 +17,11 @@ export const register = async (req, res) => {
   }
 };
 
+// ✅ Login User
 export const login = async (req, res) => {
   try {
     const { username, password } = req.body;
+
     const user = await User.findOne({ where: { username } });
     if (!user || !(await bcrypt.compare(password, user.password))) {
       return res.status(401).json({ error: "Invalid credentials" });

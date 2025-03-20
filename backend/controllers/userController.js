@@ -1,6 +1,7 @@
 import { User } from "../models/index.js";
 import logger from "../utils/logger.js";
 
+// ✅ Get all users
 export const getUsers = async (req, res) => {
   try {
     const users = await User.findAll();
