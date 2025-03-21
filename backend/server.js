@@ -8,6 +8,7 @@ import helmet from "helmet";
 import compression from "compression";
 import logger from "./utils/logger.js";
 import { syncDatabase } from "./models/index.js";
+import setupSwagger from "./utils/swagger.js";
 import userRoutes from "./routes/userRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
@@ -23,6 +24,7 @@ app.use(cors());
 app.use(helmet());
 app.use(compression());
 app.use(express.json());
+setupSwagger(app);
 
 app.use((req, res, next) => {
   res.on("finish", () => {
@@ -32,14 +34,14 @@ app.use((req, res, next) => {
 });
 
 // Routes
-app.use("/api/users", userRoutes);
-app.use("/api/auth", authRoutes);
-app.use("/api/products", productRoutes);
-app.use("/api/colors", colorRoutes);
-app.use("/api/sales", salesRoutes);
-app.use("/api/customers", customerRoutes);
-app.use("/api/roles", roleRoutes);
-app.use("/api/permissions", permissionRoutes);
+app.use("/v1/api/auth", authRoutes);
+app.use("/v1/api/users", userRoutes);
+app.use("/v1/api/colors", colorRoutes);
+app.use("/v1/api/products", productRoutes);
+app.use("/v1/api/sales", salesRoutes);
+app.use("/v1/api/customers", customerRoutes);
+app.use("/v1/api/roles", roleRoutes);
+app.use("/v1/api/permissions", permissionRoutes);
 
 // Basic Route
 app.get("/", (req, res) => {

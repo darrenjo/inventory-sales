@@ -28,13 +28,6 @@ router.post(
 
 router.get("/", authenticateToken, getProducts);
 
-router.post(
-  "/stock",
-  authenticateToken,
-  authorizePermission("manage_stock"),
-  addStock
-);
-
 router.delete(
   "/:id",
   authenticateToken,

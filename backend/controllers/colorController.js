@@ -7,6 +7,12 @@ export const createColor = async (req, res) => {
     const { color_code, fabric_type, color } = req.body;
     const user = req.user; // Ambil data user dari middleware autentikasi
 
+    if (!color || !color_code || !fabric_type) {
+      return res
+        .status(400)
+        .json({ error: "color, color_code, and fabric_type are required" });
+    }
+
     const colorAdd = await Color.create({
       color_code,
       fabric_type,

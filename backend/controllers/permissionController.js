@@ -1,4 +1,4 @@
-import { Permission } from "../models/index.js";
+import { Permission, RolePermission } from "../models/index.js";
 import sequelize from "../config/database.js";
 import logger from "../utils/logger.js";
 
@@ -74,6 +74,34 @@ export const deletePermission = async (req, res) => {
     res.json({ message: "Permission deleted successfully" });
   } catch (error) {
     logger.error("❌ Error deleting permission: " + error.message);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+// ✅ Assign Permission to Role
+export const assignPermissionToRole = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { permissionId } = req.body;
+
+    await RolePermission.create({ roleId: id, permissionId });
+    res.json({ message: "Permission assigned successfully" });
+  } catch (error) {
+    logger.error("❌ Error assigning permission: " + error.message);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+// ✅ Remove Permission from Role
+export const removePermissionFromRole = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { permissionId } = req.body;
+
+    await RolePermission.destroy({ where: { roleId: id, permissionId } });
+    res.json({ message: "Permission removed successfully" });
+  } catch (error) {
+    logger.error("❌ Error removing permission: " + error.message);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };

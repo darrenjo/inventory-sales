@@ -1,0 +1,1361 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Inventory & Sales API",
+    "version": "1.0.0",
+    "description": "API documentation for the Inventory & Sales system",
+    "contact": {}
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "responses": {
+      "UnauthorizedError": {
+        "description": "Access token is missing or invalid"
+      },
+      "ForbiddenError": {
+        "description": "Access token is invalid"
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "user",
+      "description": "Everything about your users"
+    },
+    {
+      "name": "color",
+      "description": "Everything about your users"
+    },
+    {
+      "name": "product",
+      "description": "Everything about your users"
+    },
+    {
+      "name": "stock",
+      "description": "Everything about your users"
+    },
+    {
+      "name": "sales",
+      "description": "Everything about your users"
+    },
+    {
+      "name": "customer",
+      "description": "Everything about your users"
+    },
+    {
+      "name": "permission",
+      "description": "Everything about your users"
+    },
+    {
+      "name": "role",
+      "description": "Everything about your users"
+    }
+  ],
+  "servers": [
+    {
+      "url": "http://localhost:5000"
+    }
+  ],
+  "paths": {
+    "/v1/api/auth/register": {
+      "post": {
+        "summary": "register user",
+        "tags": ["user"],
+        "description": "register user",
+        "operationId": "registerUser",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": {
+                    "type": "string",
+                    "example": "superadmin"
+                  },
+                  "password": {
+                    "type": "string",
+                    "example": "password123"
+                  },
+                  "roleId": {
+                    "type": "number",
+                    "example": 4
+                  }
+                }
+              },
+              "example": {
+                "username": "superadmin",
+                "password": "password123",
+                "roleId": 1
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User registered",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "User registered"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Username, password, and roleId are required Username already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Username, password, and roleId are required Username already exists"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Username already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Username already exists"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/api/auth/login": {
+      "post": {
+        "summary": "login user",
+        "tags": ["user"],
+        "description": "login user",
+        "operationId": "loginUser",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "password": {
+                    "type": "string",
+                    "example": "password123"
+                  },
+                  "username": {
+                    "type": "string",
+                    "example": "superadmin"
+                  }
+                }
+              },
+              "example": {
+                "password": "password123",
+                "username": "superadmin"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Login successful"
+                    },
+                    "token": {
+                      "type": "string",
+                      "example": "TOKEN"
+                    },
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "username": {
+                          "example": "superadmin"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Invalid credentials"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/api/colors": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "add color",
+        "tags": ["color"],
+        "description": "add color",
+        "operationId": "getColors",
+        "responses": {
+          "200": {
+            "description": "Successfully get color",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "color_code": {
+                        "type": "string",
+                        "example": "A553"
+                      },
+                      "fabric_type": {
+                        "type": "string",
+                        "example": "Katun"
+                      },
+                      "color": {
+                        "type": "string",
+                        "example": "Red"
+                      },
+                      "by_who": {
+                        "type": "string",
+                        "example": "586949c5-db09-4cc8-8d90-187c0881bf3c"
+                      },
+                      "createdAt": {
+                        "type": "string",
+                        "example": "2025-03-19T04:43:11.596Z"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      },
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "add color",
+        "tags": ["color"],
+        "description": "add color",
+        "operationId": "colorAdd",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "color_code": {
+                    "type": "string",
+                    "example": "A555"
+                  },
+                  "fabric_type": {
+                    "type": "string",
+                    "example": "Poliester"
+                  },
+                  "color": {
+                    "type": "string",
+                    "example": "Blue"
+                  }
+                }
+              },
+              "example": {
+                "color_code": "A555",
+                "fabric_type": "Poliester",
+                "color": "Blue"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully added color",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Color created"
+                    },
+                    "colorAdd": {
+                      "type": "object",
+                      "properties": {
+                        "createdAt": {
+                          "type": "string",
+                          "example": "2025-03-21T06:13:48.106Z"
+                        },
+                        "color_code": {
+                          "type": "string",
+                          "example": "A555"
+                        },
+                        "fabric_type": {
+                          "type": "string",
+                          "example": "Poliester"
+                        },
+                        "color": {
+                          "type": "string",
+                          "example": "Blue"
+                        },
+                        "by_who": {
+                          "type": "string",
+                          "example": "586949c5-db09-4cc8-8d90-187c0881bf3c"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Missing or invalid fields",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "color, color_code, and fabric_type are required"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    },
+    "/v1/api/products/": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "get all product",
+        "tags": ["product"],
+        "description": "get all product",
+        "operationId": "getAllProduct",
+        "responses": {
+          "200": {
+            "description": "Successfully get color",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "example": "049e2d7c-7eb5-4e3b-9bf6-ce93333dde4f"
+                      },
+                      "name": {
+                        "type": "string",
+                        "example": "Katun"
+                      },
+                      "category": {
+                        "type": "string",
+                        "example": "fabric"
+                      },
+                      "color_code": {
+                        "type": "string",
+                        "example": "A553"
+                      },
+                      "sell_price": {
+                        "type": "integer",
+                        "example": 1000
+                      },
+                      "by_who": {
+                        "type": "string",
+                        "example": "586949c5-db09-4cc8-8d90-187c0881bf3c"
+                      },
+                      "createdAt": {
+                        "type": "string",
+                        "example": "2025-03-19T04:43:11.596Z"
+                      },
+                      "updatedAt": {
+                        "type": "string",
+                        "example": "2025-03-19T04:43:11.596Z"
+                      },
+                      "batches": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "example": "KAT25_031742440146"
+                            },
+                            "product_id": {
+                              "type": "string",
+                              "example": "049e2d7c-7eb5-4e3b-9bf6-ce93333dde4f"
+                            },
+                            "price": {
+                              "type": "integer",
+                              "example": 1000
+                            },
+                            "quantity": {
+                              "type": "integer",
+                              "example": 0
+                            },
+                            "by_who": {
+                              "type": "string",
+                              "example": "586949c5-db09-4cc8-8d90-187c0881bf3c"
+                            },
+                            "status": {
+                              "type": "string",
+                              "example": "new"
+                            },
+                            "createdAt": {
+                              "type": "string",
+                              "example": "2025-03-19T04:43:11.596Z"
+                            },
+                            "updatedAt": {
+                              "type": "string",
+                              "example": "2025-03-19T04:43:11.596Z"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/ForbiddenError"
+          }
+        }
+      },
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "add product",
+        "tags": ["product"],
+        "description": "add product",
+        "operationId": "addProduct",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "example": "Katun"
+                  },
+                  "category": {
+                    "type": "string",
+                    "example": "fabric"
+                  },
+                  "color_code": {
+                    "type": "string",
+                    "example": "A553"
+                  },
+                  "sell_price": {
+                    "type": "integer",
+                    "example": 10000
+                  }
+                }
+              },
+              "example": {
+                "name": "Katun",
+                "category": "fabric",
+                "color_code": "A553",
+                "sell_price": 10000
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully add product",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Product created"
+                    },
+                    "product": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "example": "2025-03-21T06:13:48.106Z"
+                        },
+                        "name": {
+                          "type": "string",
+                          "example": "katun"
+                        },
+                        "category": {
+                          "type": "string",
+                          "example": "fabric"
+                        },
+                        "color_code": {
+                          "type": "string",
+                          "example": "A553"
+                        },
+                        "sell_price": {
+                          "type": "integer",
+                          "example": 40000
+                        },
+                        "color": {
+                          "type": "string",
+                          "example": "Blue"
+                        },
+                        "by_who": {
+                          "type": "string",
+                          "example": "586949c5-db09-4cc8-8d90-187c0881bf3c"
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "example": "2025-03-19T04:43:11.596Z"
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "example": "2025-03-19T04:43:11.596Z"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "invalid name, category, color_code, sell_price",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "name, category, color_code, and sell_price required"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/ForbiddenError"
+          }
+        }
+      }
+    },
+    "/v1/api/products/{product_id}": {
+      "delete": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "delete product",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "product_id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minimum": 1,
+              "example": "9743e0d7-a8a6-4c73-a352-3872254ec947"
+            },
+            "description": "The product ID"
+          }
+        ],
+        "tags": ["product"],
+        "description": "delete product",
+        "operationId": "deleteProduct",
+        "responses": {
+          "200": {
+            "description": "Successfully delete product",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Product deleted"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/ForbiddenError"
+          }
+        }
+      }
+    },
+    "/api/products/stock": {
+      "post": {
+        "summary": "add stock",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "tags": ["stock"],
+        "description": "add stock",
+        "operationId": "addStock",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "price": {
+                    "type": "number",
+                    "example": 10200
+                  },
+                  "product_id": {
+                    "type": "string",
+                    "example": "049e2d7c-7eb5-4e3b-9bf6-ce93333dde4f"
+                  },
+                  "quantity": {
+                    "type": "number",
+                    "example": 10
+                  }
+                }
+              },
+              "example": {
+                "price": 10200,
+                "product_id": "049e2d7c-7eb5-4e3b-9bf6-ce93333dde4f",
+                "quantity": 10
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/products/reduce-stock": {
+      "post": {
+        "summary": "reduce stock",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "tags": ["stock"],
+        "description": "reduce stock",
+        "operationId": "reduceStock",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "product_id": {
+                    "type": "string",
+                    "example": "f1498e34-b5fc-42bf-8fa0-cb86c754f884"
+                  },
+                  "quantity": {
+                    "type": "number",
+                    "example": 1
+                  }
+                }
+              },
+              "example": {
+                "product_id": "f1498e34-b5fc-42bf-8fa0-cb86c754f884",
+                "quantity": 1
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/products/{batch_id}/batches": {
+      "get": {
+        "summary": "get stock by batchid",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "batch_id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minimum": 1,
+              "example": "9743e0d7-a8a6-4c73-a352-3872254ec947"
+            }
+          }
+        ],
+        "tags": ["stock"],
+        "description": "get stock by batchid",
+        "operationId": "getStockByBatchid",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/permissions": {
+      "get": {
+        "summary": "get permission",
+        "tags": ["permission"],
+        "description": "get permission",
+        "operationId": "getPermission",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      },
+      "post": {
+        "summary": "add permission",
+        "tags": ["permission"],
+        "description": "add permission",
+        "operationId": "addPermission",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "example": "manage_alllsld"
+                  }
+                }
+              },
+              "example": {
+                "name": "manage_alllsld"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/permissions/9": {
+      "delete": {
+        "summary": "delete permission",
+        "tags": ["permission"],
+        "description": "delete permission",
+        "operationId": "deletePermission",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/permissions/7": {
+      "put": {
+        "summary": "update permission",
+        "tags": ["permission"],
+        "description": "update permission",
+        "operationId": "updatePermission",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "example": "manage_all2222222"
+                  }
+                }
+              },
+              "example": {
+                "name": "manage_all2222222"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      },
+      "/api/permissions": null,
+      "get": {
+        "summary": "get permission",
+        "tags": ["permission"],
+        "description": "get permission",
+        "operationId": "getPermission",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      },
+      "post": {
+        "summary": "add permission",
+        "tags": ["role"],
+        "description": "add permission",
+        "operationId": "addPermission",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "example": "manage_alllsld"
+                  }
+                }
+              },
+              "example": {
+                "name": "manage_alllsld"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/roles": {
+      "get": {
+        "summary": "get roles",
+        "tags": ["role"],
+        "description": "get roles",
+        "operationId": "getRoles",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      },
+      "post": {
+        "summary": "add roles",
+        "tags": ["role"],
+        "description": "add roles",
+        "operationId": "addRoles",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "example": "management_abc"
+                  }
+                }
+              },
+              "example": {
+                "name": "management_abc"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      },
+      "/api/permissions/9": null,
+      "delete": {
+        "summary": "delete permission",
+        "tags": ["permission"],
+        "description": "delete permission",
+        "operationId": "deletePermission",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      },
+      "/api/permissions/7": null,
+      "put": {
+        "summary": "update permission",
+        "tags": ["permission"],
+        "description": "update permission",
+        "operationId": "updatePermission",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "example": "manage_all2222222"
+                  }
+                }
+              },
+              "example": {
+                "name": "manage_all2222222"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/roles/5": {
+      "put": {
+        "summary": "update roles",
+        "tags": ["role"],
+        "description": "update roles",
+        "operationId": "updateRoles",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "example": "management22222"
+                  }
+                }
+              },
+              "example": {
+                "name": "management22222"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/roles/6/assign-permission": {
+      "post": {
+        "summary": "assign permission",
+        "tags": ["permission"],
+        "description": "assign permission",
+        "operationId": "assignPermission",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "permissionId": {
+                    "type": "number",
+                    "example": 3
+                  }
+                }
+              },
+              "example": {
+                "permissionId": 3
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/roles/6/remove-permission": {
+      "post": {
+        "summary": "unassign permission",
+        "tags": ["permission"],
+        "description": "unassign permission",
+        "operationId": "unassignPermission",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "permissionId": {
+                    "type": "number",
+                    "example": 3
+                  }
+                }
+              },
+              "example": {
+                "permissionId": 3
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/roles/8": {
+      "delete": {
+        "summary": "delete roles",
+        "tags": ["role"],
+        "description": "delete roles",
+        "operationId": "deleteRoles",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/sales/refund": {
+      "post": {
+        "summary": "refund sales",
+        "tags": ["sales"],
+        "description": "refund sales",
+        "operationId": "refundSales",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "product_id": {
+                    "type": "string",
+                    "example": "b6d7147b-0cce-4d3d-9aa3-765687287757"
+                  },
+                  "quantity": {
+                    "type": "number",
+                    "example": 1
+                  },
+                  "transaction_id": {
+                    "type": "string",
+                    "example": "fb3b4d32-6ce3-4e77-8ff8-947c54a117a0"
+                  }
+                }
+              },
+              "example": {
+                "product_id": "b6d7147b-0cce-4d3d-9aa3-765687287757",
+                "quantity": 1,
+                "transaction_id": "fb3b4d32-6ce3-4e77-8ff8-947c54a117a0"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/sales/return": {
+      "post": {
+        "summary": "return sales",
+        "tags": ["sales"],
+        "description": "return sales",
+        "operationId": "returnSales",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "product_id": {
+                    "type": "string",
+                    "example": "b6d7147b-0cce-4d3d-9aa3-765687287757"
+                  },
+                  "quantity": {
+                    "type": "number",
+                    "example": 1
+                  },
+                  "reason": {
+                    "type": "string",
+                    "example": "Barang cacat"
+                  },
+                  "transaction_id": {
+                    "type": "string",
+                    "example": "d6871efd-630e-4315-97b1-c805caa0ba86"
+                  }
+                }
+              },
+              "example": {
+                "product_id": "b6d7147b-0cce-4d3d-9aa3-765687287757",
+                "quantity": 1,
+                "reason": "Barang cacat",
+                "transaction_id": "d6871efd-630e-4315-97b1-c805caa0ba86"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/customers": {
+      "post": {
+        "summary": "add customer",
+        "tags": ["customer"],
+        "description": "add customer",
+        "operationId": "addCustomer",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "example": "toni2341@mail.com"
+                  },
+                  "name": {
+                    "type": "string",
+                    "example": "ToNNi"
+                  },
+                  "phone": {
+                    "type": "string",
+                    "example": "081812342339"
+                  }
+                }
+              },
+              "example": {
+                "email": "toni2341@mail.com",
+                "name": "ToNNi",
+                "phone": "081812342339"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/sales/transactions": {
+      "post": {
+        "summary": "sell stock sales",
+        "tags": ["sales"],
+        "description": "sell stock sales",
+        "operationId": "sellStockSales",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "customer_id": {
+                    "type": "string",
+                    "example": "f2885a19-99d7-43f8-9245-4933d1824d1b"
+                  },
+                  "sales": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "product_id": {
+                          "type": "string",
+                          "example": "049e2d7c-7eb5-4e3b-9bf6-ce93333dde4f"
+                        },
+                        "quantity": {
+                          "type": "number",
+                          "example": 3
+                        }
+                      }
+                    },
+                    "example": [
+                      {
+                        "product_id": "049e2d7c-7eb5-4e3b-9bf6-ce93333dde4f",
+                        "quantity": 3
+                      }
+                    ]
+                  }
+                }
+              },
+              "example": {
+                "customer_id": "f2885a19-99d7-43f8-9245-4933d1824d1b",
+                "sales": [
+                  {
+                    "product_id": "049e2d7c-7eb5-4e3b-9bf6-ce93333dde4f",
+                    "quantity": 3
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/sales/summary": {
+      "get": {
+        "summary": "get sales summary data",
+        "tags": ["sales"],
+        "description": "get sales summary data",
+        "operationId": "getSalesSummaryData",
+        "parameters": [
+          {
+            "name": "range",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "example": "daily"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/sales/category-summary": {
+      "get": {
+        "summary": "get sales category data",
+        "tags": ["sales"],
+        "description": "get sales category data",
+        "operationId": "getSalesCategoryData",
+        "parameters": [
+          {
+            "name": "range",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "example": "monthly"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/sales/sales-by-staff": {
+      "get": {
+        "summary": "get sales staff data",
+        "tags": ["sales"],
+        "description": "get sales staff data",
+        "operationId": "getSalesStaffData",
+        "parameters": [
+          {
+            "name": "rangeType",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "example": "month"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/sales/customer-loyalty-stats": {
+      "get": {
+        "summary": "get sales cust stats",
+        "tags": ["customer"],
+        "description": "get sales cust stats",
+        "operationId": "getSalesCustStats",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    }
+  }
+}

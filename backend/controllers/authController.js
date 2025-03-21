@@ -8,6 +8,17 @@ export const register = async (req, res) => {
   try {
     const { username, password, roleId } = req.body;
 
+    if (!username || !password || !roleId) {
+      return res
+        .status(400)
+        .json({ error: "Username, password, and roleId are required" });
+    }
+
+    const existingUser = await User.findOne({ where: { username } });
+    if (existingUser) {
+      return res.status(409).json({ error: "Username already exists" });
+    }
+
     const user = await User.create({ username, password, roleId });
 
     res.status(201).json({ message: "User registered" });
