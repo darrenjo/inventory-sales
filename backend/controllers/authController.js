@@ -43,6 +43,14 @@ export const login = async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: "1h" } // FOR DEVELOPMENT PURPOSES ONLY
     );
+
+    res.cookie("token", token, {
+      httpOnly: true, // Cookie tidak bisa diakses dari frontend (lebih aman)
+      secure: process.env.NODE_ENV === "production", // Hanya pakai secure di production
+      sameSite: "strict", // Cegah CSRF
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 hari
+    });
+
     res.status(200).json({
       message: "Login successful",
       token,
@@ -56,4 +64,14 @@ export const login = async (req, res) => {
     logger.error("Error logging in:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
+};
+
+export const logout = async (req, res) => {
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    path: "/",
+  });
+  res.status(200).json({ message: "Logged out" });
 };

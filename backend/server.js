@@ -6,6 +6,7 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import compression from "compression";
+import cookieParser from "cookie-parser";
 import logger from "./utils/logger.js";
 import { syncDatabase } from "./models/index.js";
 import setupSwagger from "./utils/swagger.js";
@@ -20,7 +21,13 @@ import permissionRoutes from "./routes/permissionRoutes.js";
 
 // Initialize Express
 const app = express();
-app.use(cors());
+app.use(cookieParser());
+app.use(
+  cors({
+    origin: "http://localhost:5173", // Ganti dengan frontend URL
+    credentials: true, // Wajib untuk mengirim cookies ke frontend
+  })
+);
 app.use(helmet());
 app.use(compression());
 app.use(express.json());

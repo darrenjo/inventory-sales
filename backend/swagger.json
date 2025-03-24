@@ -30,31 +30,31 @@
     },
     {
       "name": "color",
-      "description": "Everything about your users"
+      "description": "Everything about your colors"
     },
     {
       "name": "product",
-      "description": "Everything about your users"
+      "description": "Everything about your products"
     },
     {
       "name": "stock",
-      "description": "Everything about your users"
+      "description": "Everything about your stocks"
     },
     {
       "name": "sales",
-      "description": "Everything about your users"
+      "description": "Everything about your sales"
     },
     {
       "name": "customer",
-      "description": "Everything about your users"
+      "description": "Everything about your customers"
     },
     {
       "name": "permission",
-      "description": "Everything about your users"
+      "description": "Everything about your permissions"
     },
     {
       "name": "role",
-      "description": "Everything about your users"
+      "description": "Everything about your roles"
     }
   ],
   "servers": [
@@ -115,7 +115,7 @@
             }
           },
           "400": {
-            "description": "Username, password, and roleId are required Username already exists",
+            "description": "Username, password, and roleId are required.",
             "content": {
               "application/json": {
                 "schema": {

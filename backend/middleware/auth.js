@@ -1,14 +1,17 @@
 import jwt from "jsonwebtoken";
 
 export const authenticateToken = (req, res, next) => {
-  const token = req.header("Authorization");
+  // console.log("Cookies received:", req.cookies);
+
+  const token = req.cookies.token;
   if (!token)
     return res
       .status(401)
       .json({ error: "Access token is missing or invalid" });
 
   try {
-    const verified = jwt.verify(token.split(" ")[1], process.env.JWT_SECRET);
+    const verified = jwt.verify(token, process.env.JWT_SECRET);
+    // console.log("Token decoded:", verified);
     req.user = verified;
     next();
   } catch (error) {

@@ -32,6 +32,10 @@ A fullstack web application for managing inventory and sales, built with Node.js
 - Reports and analytics
 - Dashboard with key performance indicators
 
+## Changelog
+
+[Trello](https://trello.com/b/ACki64OY/inventory-sales)
+
 ## Tech Stack
 
 ### Backend
@@ -200,6 +204,15 @@ REACT_APP_API_URL=http://localhost:5000/api
 | POST   | /api/roles     | Create role |
 | PUT    | /api/roles/:id | Edit role   |
 | DELETE | /api/roles/:id | Delete role |
+
+## API Documentation Swagger
+
+```bash
+cd backend
+npm run dev
+```
+
+Visit `localhost:5000/api-docs`
 
 ## Database Schema
 

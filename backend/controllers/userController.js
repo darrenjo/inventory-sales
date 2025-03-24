@@ -11,3 +11,10 @@ export const getUsers = async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
+
+export const profile = async (req, res) => {
+  if (!req.user) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  res.json({ message: "User authenticated", user: req.user });
+};

@@ -1,5 +1,5 @@
 import express from "express";
-import { getUsers } from "../controllers/userController.js";
+import { getUsers, profile } from "../controllers/userController.js";
 import { authenticateToken, authorizeRole } from "../middleware/auth.js";
 import { authorizePermission } from "../middleware/authPermission.js";
 
@@ -10,5 +10,7 @@ router.get(
   authorizePermission("manage_users"),
   getUsers
 );
+
+router.get("/profile", authenticateToken, profile);
 
 export default router;
