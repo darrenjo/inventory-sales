@@ -16,5 +16,6 @@ export const profile = async (req, res) => {
   if (!req.user) {
     return res.status(401).json({ error: "Unauthorized" });
   }
+  console.log(req.user);
   res.json({ message: "User authenticated", user: req.user });
 };

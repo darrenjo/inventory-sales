@@ -124,7 +124,7 @@ PORT=5000
 ### Frontend Environment Variables
 
 ```bash
-REACT_APP_API_URL=http://localhost:5000/api
+REACT_APP_API_URL=http://localhost:5000/v1/api
 ```
 
 ## API Documentation
@@ -144,66 +144,66 @@ REACT_APP_API_URL=http://localhost:5000/api
 
 ### Product
 
-| Method | Endpoint          | Description        |
-| ------ | ----------------- | ------------------ |
-| GET    | /api/products     | Get all products   |
-| POST   | /api/products     | Create new product |
-| DELETE | /api/products/:id | Delete product     |
+| Method | Endpoint            | Description        |
+| ------ | ------------------- | ------------------ |
+| GET    | v1/api/products     | Get all products   |
+| POST   | v1/api/products     | Create new product |
+| DELETE | v1/api/products/:id | Delete product     |
 
 ### Stock
 
-| Method | Endpoint         | Description               |
-| ------ | ---------------- | ------------------------- |
-| GET    | /api/stocks      | Get all products          |
-| POST   | /api/stocks      | Create new product        |
-| GET    | /api/:id/batches | Get batches by product id |
+| Method | Endpoint           | Description               |
+| ------ | ------------------ | ------------------------- |
+| GET    | v1/api/stocks      | Get all products          |
+| POST   | v1/api/stocks      | Create new product        |
+| GET    | v1/api/:id/batches | Get batches by product id |
 
 ### Color
 
-| Method | Endpoint    | Description      |
-| ------ | ----------- | ---------------- |
-| GET    | /api/colors | Get all colors   |
-| POST   | /api/colors | Create new color |
+| Method | Endpoint      | Description      |
+| ------ | ------------- | ---------------- |
+| GET    | v1/api/colors | Get all colors   |
+| POST   | v1/api/colors | Create new color |
 
 ### Sales
 
-| Method | Endpoint                          | Description                         |
-| ------ | --------------------------------- | ----------------------------------- |
-| GET    | /api/sales/products               | Get all orders                      |
-| POST   | /api/sales/transactions           | Create new order                    |
-| POST   | /api/sales/refund                 | Create refund                       |
-| POST   | /api/sales/return                 | Create return                       |
-| GET    | /api/sales/summary                | Get sales summary                   |
-| GET    | /api/sales/category-summary       | Get sales summary data per category |
-| GET    | /api/sales/sales-by-staff         | Get staff sales summary data        |
-| GET    | /api/sales/customer-loyalty-stats | Get customer loyalty data           |
+| Method | Endpoint                            | Description                         |
+| ------ | ----------------------------------- | ----------------------------------- |
+| GET    | v1/api/sales/products               | Get all orders                      |
+| POST   | v1/api/sales/transactions           | Create new order                    |
+| POST   | v1/api/sales/refund                 | Create refund                       |
+| POST   | v1/api/sales/return                 | Create return                       |
+| GET    | v1/api/sales/summary                | Get sales summary                   |
+| GET    | v1/api/sales/category-summary       | Get sales summary data per category |
+| GET    | v1/api/sales/sales-by-staff         | Get staff sales summary data        |
+| GET    | v1/api/sales/customer-loyalty-stats | Get customer loyalty data           |
 
 ### Customer
 
-| Method | Endpoint                   | Description         |
-| ------ | -------------------------- | ------------------- |
-| GET    | /api/customers/:customerId | Get single customer |
-| POST   | /api/customers             | Create new customer |
+| Method | Endpoint                     | Description         |
+| ------ | ---------------------------- | ------------------- |
+| GET    | v1/api/customers/:customerId | Get single customer |
+| POST   | v1/api/customers             | Create new customer |
 
 ### Permission
 
-| Method | Endpoint                   | Description       |
-| ------ | -------------------------- | ----------------- |
-| GET    | /api/permissions           | Get permission    |
-| POST   | /api/permissions           | Create permission |
-| PUT    | /api/permissions/:id       | Edit permission   |
-| DELETE | /api/permissions/:id       | Delete permission |
-| POST   | /api/:id/assign-permission | Assign permission |
-| POST   | /api/:id/remove-permission | Remove permission |
+| Method | Endpoint                     | Description       |
+| ------ | ---------------------------- | ----------------- |
+| GET    | v1/api/permissions           | Get permission    |
+| POST   | v1/api/permissions           | Create permission |
+| PUT    | v1/api/permissions/:id       | Edit permission   |
+| DELETE | v1/api/permissions/:id       | Delete permission |
+| POST   | v1/api/:id/assign-permission | Assign permission |
+| POST   | v1/api/:id/remove-permission | Remove permission |
 
 ### Role
 
-| Method | Endpoint       | Description |
-| ------ | -------------- | ----------- |
-| GET    | /api/roles     | Get role    |
-| POST   | /api/roles     | Create role |
-| PUT    | /api/roles/:id | Edit role   |
-| DELETE | /api/roles/:id | Delete role |
+| Method | Endpoint         | Description |
+| ------ | ---------------- | ----------- |
+| GET    | v1/api/roles     | Get role    |
+| POST   | v1/api/roles     | Create role |
+| PUT    | v1/api/roles/:id | Edit role   |
+| DELETE | v1/api/roles/:id | Delete role |
 
 ## API Documentation Swagger
 
