@@ -4,7 +4,7 @@ import logger from "../utils/logger.js";
 
 const seedRolesAndPermissions = async () => {
   try {
-    await sequelize.sync({ force: true }); // Jangan lupa ganti force: true jika ingin menghapus tabel yang sudah ada
+    await sequelize.sync({ force: false }); // Jangan lupa ganti force: true jika ingin menghapus tabel yang sudah ada
 
     const roles = await Role.bulkCreate([
       { name: "superadmin" },

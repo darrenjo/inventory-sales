@@ -5,6 +5,7 @@ interface User {
   id: string;
   username: string;
   roleId: number;
+  roleName: string;
 }
 
 interface AuthContextType {
@@ -13,9 +14,7 @@ interface AuthContextType {
   isLoading: boolean; // Tambahkan isLoading
 }
 
-export const AuthContext = createContext<AuthContextType | undefined>(
-  undefined
-);
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -37,6 +36,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           id: res.data.user.id,
           username: res.data.user.username,
           roleId: res.data.user.roleId, // Pastikan ini benar
+          roleName: res.data.user.roleName, // Pastikan ini benar
         });
       } catch {
         setUser(null);

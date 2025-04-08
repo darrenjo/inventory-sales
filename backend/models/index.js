@@ -114,6 +114,9 @@ Permission.belongsToMany(Role, {
 RolePermission.belongsTo(Role, { foreignKey: "roleId" });
 RolePermission.belongsTo(Permission, { foreignKey: "permissionId" });
 
+User.belongsTo(Role, { foreignKey: "roleId" });
+Role.hasMany(User, { foreignKey: "roleId" });
+
 const syncDatabase = async () => {
   try {
     await sequelize.sync({ alter: true, force: false });

@@ -1,20 +1,12 @@
-import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const Unauthorized = () => {
-  const [message, setMessage] = useState("");
-
-  useEffect(() => {
-    setMessage(
-      localStorage.getItem("unauthorizedMessage") || "Anda tidak memiliki izin."
-    );
-    localStorage.removeItem("unauthorizedMessage");
-  }, []);
+  const navigate = useNavigate();
 
   return (
     <div>
-      <h1>403 - Unauthorized</h1>
-      <p>{message}</p>
-      <a href="/">🔙 Kembali ke Home</a>
+      <h1>Unauthorized Page</h1>
+      <button onClick={() => navigate("/")}>Back to Home</button>
     </div>
   );
 };

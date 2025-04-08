@@ -14,14 +14,12 @@ export const api = axios.create({
 export const checkAuth = async (): Promise<boolean> => {
   try {
     const res = await axios.get(`${API_URL}/users/profile`, {
-      withCredentials: true, // Supaya cookies dikirim ke server
+      withCredentials: true, // Ensure cookies are sent to the server
     });
-    // return res.status === 200; // Kalau sukses, berarti user authenticated
-    // console.log("User data:", res.data.user);
-    return res.data;
+    return res.data; // Assuming your API returns the user data or true/false
   } catch (error) {
     console.log("Auth check failed:", error);
-    return false; // Kalau error (401 Unauthorized), berarti user belum login
+    return false; // If error (e.g., 401 Unauthorized), return false for not authenticated
   }
 };
 
@@ -33,10 +31,10 @@ export const login = async (username: string, password: string) => {
   );
 };
 
-// export const logout = async () => {
-//   try {
-//     await axios.post(`${API_URL}/auth/logout`, {}, { withCredentials: true });
-//   } catch (error) {
-//     console.error("Logout failed:", error);
-//   }
-// };
+export const logout = async () => {
+  try {
+    await axios.post(`${API_URL}/auth/logout`, {}, { withCredentials: true });
+  } catch (error) {
+    console.error("Logout failed:", error);
+  }
+};
