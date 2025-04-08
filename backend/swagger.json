@@ -115,7 +115,7 @@
             }
           },
           "400": {
-            "description": "Username, password, and roleId are required.",
+            "description": "Username, password, and roleId are required Username already exists",
             "content": {
               "application/json": {
                 "schema": {
@@ -433,7 +433,7 @@
                         "type": "string",
                         "example": "2025-03-19T04:43:11.596Z"
                       },
-                      "batches": {
+                      "Batches": {
                         "type": "array",
                         "items": {
                           "type": "object",
@@ -654,7 +654,7 @@
         }
       }
     },
-    "/api/products/stock": {
+    "/v1/api/products/stock": {
       "post": {
         "summary": "add stock",
         "security": [
@@ -671,13 +671,13 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "price": {
-                    "type": "number",
-                    "example": 10200
-                  },
                   "product_id": {
                     "type": "string",
                     "example": "049e2d7c-7eb5-4e3b-9bf6-ce93333dde4f"
+                  },
+                  "price": {
+                    "type": "number",
+                    "example": 10200
                   },
                   "quantity": {
                     "type": "number",
@@ -686,8 +686,8 @@
                 }
               },
               "example": {
-                "price": 10200,
                 "product_id": "049e2d7c-7eb5-4e3b-9bf6-ce93333dde4f",
+                "price": 10200,
                 "quantity": 10
               }
             }
@@ -695,12 +695,65 @@
         },
         "responses": {
           "200": {
-            "description": ""
+            "description": "Successfully add stock",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Stock added"
+                    },
+                    "batch": {
+                      "type": "object",
+                      "properties": {
+                        "status": {
+                          "type": "string",
+                          "example": "new"
+                        },
+                        "id": {
+                          "type": "string",
+                          "example": "KAT25_031742559499"
+                        },
+                        "product_id": {
+                          "type": "string",
+                          "example": "049e2d7c-7eb5-4e3b-9bf6-ce93333dde4f"
+                        },
+                        "price": {
+                          "type": "integer",
+                          "example": 10200
+                        },
+                        "quantity": {
+                          "type": "integer",
+                          "example": 10
+                        },
+                        "by_who": {
+                          "type": "string",
+                          "example": "586949c5-db09-4cc8-8d90-187c0881bf3c"
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "example": "2025-03-19T04:43:11.596Z"
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "example": "2025-03-19T04:43:11.596Z"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/ForbiddenError"
           }
         }
       }
     },
-    "/api/products/reduce-stock": {
+    "/v1/api/products/reduce-stock": {
       "post": {
         "summary": "reduce stock",
         "security": [
@@ -736,12 +789,44 @@
         },
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Stock reduced successfully"
+                    },
+                    "updatedBatches": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "batchId": {
+                            "type": "string",
+                            "example": "KAT25_031742559499"
+                          },
+                          "remainingStock": {
+                            "type": "integer",
+                            "example": 9
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/ForbiddenError"
           }
         }
       }
     },
-    "/api/products/{batch_id}/batches": {
+    "/v1/api/products/{product_id}/batches": {
       "get": {
         "summary": "get stock by batchid",
         "security": [
@@ -752,7 +837,7 @@
         "parameters": [
           {
             "in": "path",
-            "name": "batch_id",
+            "name": "product_id",
             "required": true,
             "schema": {
               "type": "string",
@@ -766,7 +851,725 @@
         "operationId": "getStockByBatchid",
         "responses": {
           "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "example": "KAT25_031742440146"
+                          },
+                          "product_id": {
+                            "type": "string",
+                            "example": "049e2d7c-7eb5-4e3b-9bf6-ce93333dde4f"
+                          },
+                          "price": {
+                            "type": "integer",
+                            "example": 10200
+                          },
+                          "quantity": {
+                            "type": "integer",
+                            "example": 10
+                          },
+                          "by_who": {
+                            "type": "string",
+                            "example": "586949c5-db09-4cc8-8d90-187c0881bf3c"
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "example": "2025-03-19T04:43:11.596Z"
+                          }
+                        }
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "example": "KAT25_031742440146"
+                          },
+                          "product_id": {
+                            "type": "string",
+                            "example": "049e2d7c-7eb5-4e3b-9bf6-ce93333dde4f"
+                          },
+                          "price": {
+                            "type": "integer",
+                            "example": 10200
+                          },
+                          "quantity": {
+                            "type": "integer",
+                            "example": 10
+                          },
+                          "by_who": {
+                            "type": "string",
+                            "example": "586949c5-db09-4cc8-8d90-187c0881bf3c"
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "example": "2025-03-19T04:43:11.596Z"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/ForbiddenError"
+          }
+        }
+      }
+    },
+    "/v1/api/sales/transactions": {
+      "post": {
+        "summary": "sell stock sales with customer id",
+        "tags": ["sales"],
+        "description": "sell stock sales with customer id",
+        "operationId": "sellStockSales",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "customer_id": {
+                    "type": "string",
+                    "example": "f2885a19-99d7-43f8-9245-4933d1824d1b"
+                  },
+                  "sales": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "product_id": {
+                          "type": "string",
+                          "example": "049e2d7c-7eb5-4e3b-9bf6-ce93333dde4f"
+                        },
+                        "quantity": {
+                          "type": "number",
+                          "example": 3
+                        }
+                      }
+                    },
+                    "example": [
+                      {
+                        "product_id": "049e2d7c-7eb5-4e3b-9bf6-ce93333dde4f",
+                        "quantity": 3
+                      }
+                    ]
+                  }
+                }
+              },
+              "example": {
+                "sales": [
+                  {
+                    "product_id": "049e2d7c-7eb5-4e3b-9bf6-ce93333dde4f",
+                    "quantity": 3
+                  }
+                ],
+                "customer_id": "f2885a19-99d7-43f8-9245-4933d1824d1b"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Stock added"
+                    },
+                    "transactionId": {
+                      "type": "string",
+                      "example": "2c126abc-5a61-4854-9a44-450d86b50945"
+                    },
+                    "total_price": {
+                      "type": "number",
+                      "example": 10000
+                    },
+                    "discount": {
+                      "type": "number",
+                      "example": 0
+                    },
+                    "final_price": {
+                      "type": "number",
+                      "example": 10000
+                    },
+                    "points_earned": {
+                      "type": "number",
+                      "example": 0
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/ForbiddenError"
+          }
+        }
+      }
+    },
+    "/v1/api/sales/transactions without customerID": {
+      "post": {
+        "summary": "sell stock sales without customer id",
+        "tags": ["sales"],
+        "description": "sell stock sales without customer id",
+        "operationId": "sellStockSales2",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "customer_id": {
+                    "type": "string",
+                    "example": ""
+                  },
+                  "sales": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "product_id": {
+                          "type": "string",
+                          "example": "049e2d7c-7eb5-4e3b-9bf6-ce93333dde4f"
+                        },
+                        "quantity": {
+                          "type": "number",
+                          "example": 3
+                        }
+                      }
+                    },
+                    "example": [
+                      {
+                        "product_id": "049e2d7c-7eb5-4e3b-9bf6-ce93333dde4f",
+                        "quantity": 3
+                      }
+                    ]
+                  }
+                }
+              },
+              "example": {
+                "sales": [
+                  {
+                    "product_id": "049e2d7c-7eb5-4e3b-9bf6-ce93333dde4f",
+                    "quantity": 3
+                  }
+                ],
+                "customer_id": ""
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Stock added"
+                    },
+                    "transactionId": {
+                      "type": "string",
+                      "example": "f70115b4-9c74-47d0-a03d-d9d231a04d1e"
+                    },
+                    "total_price": {
+                      "type": "number",
+                      "example": 10000
+                    },
+                    "discount": {
+                      "type": "number",
+                      "example": 0
+                    },
+                    "final_price": {
+                      "type": "number",
+                      "example": 10000
+                    },
+                    "points_earned": {
+                      "type": "number",
+                      "example": 0
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/ForbiddenError"
+          }
+        }
+      }
+    },
+    "/v1/api/sales/refund": {
+      "post": {
+        "summary": "refund sales",
+        "tags": ["sales"],
+        "description": "refund sales",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "operationId": "refundSales",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "transaction_id": {
+                    "type": "string",
+                    "example": "fb3b4d32-6ce3-4e77-8ff8-947c54a117a0"
+                  },
+                  "product_id": {
+                    "type": "string",
+                    "example": "b6d7147b-0cce-4d3d-9aa3-765687287757"
+                  },
+                  "quantity": {
+                    "type": "number",
+                    "example": 1
+                  }
+                }
+              },
+              "example": {
+                "transaction_id": "fb3b4d32-6ce3-4e77-8ff8-947c54a117a0",
+                "product_id": "b6d7147b-0cce-4d3d-9aa3-765687287757",
+                "quantity": 1
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Refund processed successfully"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/ForbiddenError"
+          }
+        }
+      }
+    },
+    "/v1/api/sales/return": {
+      "post": {
+        "summary": "return sales",
+        "tags": ["sales"],
+        "description": "return sales",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "operationId": "returnSales",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "product_id": {
+                    "type": "string",
+                    "example": "b6d7147b-0cce-4d3d-9aa3-765687287757"
+                  },
+                  "quantity": {
+                    "type": "number",
+                    "example": 1
+                  },
+                  "reason": {
+                    "type": "string",
+                    "example": "Barang cacat"
+                  },
+                  "transaction_id": {
+                    "type": "string",
+                    "example": "d6871efd-630e-4315-97b1-c805caa0ba86"
+                  }
+                }
+              },
+              "example": {
+                "product_id": "b6d7147b-0cce-4d3d-9aa3-765687287757",
+                "quantity": 1,
+                "reason": "Barang cacat",
+                "transaction_id": "d6871efd-630e-4315-97b1-c805caa0ba86"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Return processed successfully"
+                    },
+                    "newReturn": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "example": "60f47813-1380-4660-8814-6a44671dc768"
+                        },
+                        "returned_at": {
+                          "type": "string",
+                          "example": "2025-04-03T12:38:32.886Z"
+                        },
+                        "transaction_id": {
+                          "type": "string",
+                          "example": "2c126abc-5a61-4854-9a44-450d86b50945"
+                        },
+                        "product_id": {
+                          "type": "string",
+                          "example": "60f47813-1380-4660-8814-6a44671dc768"
+                        },
+                        "batch_id": {
+                          "type": "string",
+                          "example": "KAT25_031742559499_RET"
+                        },
+                        "quantity": {
+                          "type": "number",
+                          "example": 1
+                        },
+                        "reason": {
+                          "type": "string",
+                          "example": "barang cacat"
+                        },
+                        "return_by": {
+                          "type": "string",
+                          "example": "586949c5-db09-4cc8-8d90-187c0881bf3c"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/ForbiddenError"
+          }
+        }
+      }
+    },
+    "/v1/api/sales/summary": {
+      "get": {
+        "summary": "get sales summary data (daily, weekly. monthly)",
+        "tags": ["sales"],
+        "description": "get sales summary data",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "operationId": "getSalesSummaryData",
+        "parameters": [
+          {
+            "name": "range",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "example": "daily"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "range": {
+                      "type": "string",
+                      "example": "daily"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "oneOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "date": {
+                                "type": "string",
+                                "example": "2025-03-20T00:00:00.000Z"
+                              },
+                              "total_sales": {
+                                "type": "string",
+                                "example": 100000
+                              }
+                            }
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "date": {
+                                "type": "string",
+                                "example": "2025-04-03T00:00:00.000Z"
+                              },
+                              "total_sales": {
+                                "type": "string",
+                                "example": 20000
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/ForbiddenError"
+          }
+        }
+      }
+    },
+    "/v1/api/sales/category-summary": {
+      "get": {
+        "summary": "get sales category data (daily, weekly. monthly)",
+        "tags": ["sales"],
+        "description": "get sales category data",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "operationId": "getSalesCategoryData",
+        "parameters": [
+          {
+            "name": "range",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "example": "monthly"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "range": {
+                      "type": "string",
+                      "example": "monthly"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "oneOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "date": {
+                                "type": "string",
+                                "example": "2025-03-01T00:00:00.000Z"
+                              },
+                              "category": {
+                                "type": "string",
+                                "example": "Katun"
+                              },
+                              "total_sales": {
+                                "type": "string",
+                                "example": 100000
+                              }
+                            }
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "date": {
+                                "type": "string",
+                                "example": "2025-04-01T00:00:00.000Z"
+                              },
+                              "category": {
+                                "type": "string",
+                                "example": "Katun"
+                              },
+                              "total_sales": {
+                                "type": "string",
+                                "example": 20000
+                              }
+                            }
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "date": {
+                                "type": "string",
+                                "example": "2025-04-01T00:00:00.000Z"
+                              },
+                              "category": {
+                                "type": "string",
+                                "example": "Poliester"
+                              },
+                              "total_sales": {
+                                "type": "string",
+                                "example": 30000
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/ForbiddenError"
+          }
+        }
+      }
+    },
+    "/v1/api/sales/sales-by-staff": {
+      "get": {
+        "summary": "get sales staff data (day, month. year)",
+        "tags": ["sales"],
+        "description": "get sales staff data",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "operationId": "getSalesStaffData",
+        "parameters": [
+          {
+            "name": "rangeType",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "example": "month"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Sales by staff fetched successfully"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "oneOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "date": {
+                                "type": "string",
+                                "example": "2025-03-01T00:00:00.000Z"
+                              },
+                              "sales_staff": {
+                                "type": "string",
+                                "example": "superadmin"
+                              },
+                              "total_sales": {
+                                "type": "string",
+                                "example": 100000
+                              }
+                            }
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "date": {
+                                "type": "string",
+                                "example": "2025-04-01T00:00:00.000Z"
+                              },
+                              "sales_staff": {
+                                "type": "string",
+                                "example": "superadmin"
+                              },
+                              "total_sales": {
+                                "type": "string",
+                                "example": 50000
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/ForbiddenError"
+          }
+        }
+      }
+    },
+    "/api/sales/customer-loyalty-stats": {
+      "get": {
+        "summary": "get sales cust stats",
+        "tags": ["customer"],
+        "description": "get sales cust stats",
+        "operationId": "getSalesCustStats",
+        "responses": {
+          "200": {
             "description": ""
+          },
+          "403": {
+            "$ref": "#/components/responses/ForbiddenError"
           }
         }
       }
@@ -1088,93 +1891,6 @@
         }
       }
     },
-    "/api/sales/refund": {
-      "post": {
-        "summary": "refund sales",
-        "tags": ["sales"],
-        "description": "refund sales",
-        "operationId": "refundSales",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "product_id": {
-                    "type": "string",
-                    "example": "b6d7147b-0cce-4d3d-9aa3-765687287757"
-                  },
-                  "quantity": {
-                    "type": "number",
-                    "example": 1
-                  },
-                  "transaction_id": {
-                    "type": "string",
-                    "example": "fb3b4d32-6ce3-4e77-8ff8-947c54a117a0"
-                  }
-                }
-              },
-              "example": {
-                "product_id": "b6d7147b-0cce-4d3d-9aa3-765687287757",
-                "quantity": 1,
-                "transaction_id": "fb3b4d32-6ce3-4e77-8ff8-947c54a117a0"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        }
-      }
-    },
-    "/api/sales/return": {
-      "post": {
-        "summary": "return sales",
-        "tags": ["sales"],
-        "description": "return sales",
-        "operationId": "returnSales",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "product_id": {
-                    "type": "string",
-                    "example": "b6d7147b-0cce-4d3d-9aa3-765687287757"
-                  },
-                  "quantity": {
-                    "type": "number",
-                    "example": 1
-                  },
-                  "reason": {
-                    "type": "string",
-                    "example": "Barang cacat"
-                  },
-                  "transaction_id": {
-                    "type": "string",
-                    "example": "d6871efd-630e-4315-97b1-c805caa0ba86"
-                  }
-                }
-              },
-              "example": {
-                "product_id": "b6d7147b-0cce-4d3d-9aa3-765687287757",
-                "quantity": 1,
-                "reason": "Barang cacat",
-                "transaction_id": "d6871efd-630e-4315-97b1-c805caa0ba86"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        }
-      }
-    },
     "/api/customers": {
       "post": {
         "summary": "add customer",
@@ -1209,147 +1925,6 @@
             }
           }
         },
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        }
-      }
-    },
-    "/api/sales/transactions": {
-      "post": {
-        "summary": "sell stock sales",
-        "tags": ["sales"],
-        "description": "sell stock sales",
-        "operationId": "sellStockSales",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "customer_id": {
-                    "type": "string",
-                    "example": "f2885a19-99d7-43f8-9245-4933d1824d1b"
-                  },
-                  "sales": {
-                    "type": "array",
-                    "items": {
-                      "type": "object",
-                      "properties": {
-                        "product_id": {
-                          "type": "string",
-                          "example": "049e2d7c-7eb5-4e3b-9bf6-ce93333dde4f"
-                        },
-                        "quantity": {
-                          "type": "number",
-                          "example": 3
-                        }
-                      }
-                    },
-                    "example": [
-                      {
-                        "product_id": "049e2d7c-7eb5-4e3b-9bf6-ce93333dde4f",
-                        "quantity": 3
-                      }
-                    ]
-                  }
-                }
-              },
-              "example": {
-                "customer_id": "f2885a19-99d7-43f8-9245-4933d1824d1b",
-                "sales": [
-                  {
-                    "product_id": "049e2d7c-7eb5-4e3b-9bf6-ce93333dde4f",
-                    "quantity": 3
-                  }
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        }
-      }
-    },
-    "/api/sales/summary": {
-      "get": {
-        "summary": "get sales summary data",
-        "tags": ["sales"],
-        "description": "get sales summary data",
-        "operationId": "getSalesSummaryData",
-        "parameters": [
-          {
-            "name": "range",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "example": "daily"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        }
-      }
-    },
-    "/api/sales/category-summary": {
-      "get": {
-        "summary": "get sales category data",
-        "tags": ["sales"],
-        "description": "get sales category data",
-        "operationId": "getSalesCategoryData",
-        "parameters": [
-          {
-            "name": "range",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "example": "monthly"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        }
-      }
-    },
-    "/api/sales/sales-by-staff": {
-      "get": {
-        "summary": "get sales staff data",
-        "tags": ["sales"],
-        "description": "get sales staff data",
-        "operationId": "getSalesStaffData",
-        "parameters": [
-          {
-            "name": "rangeType",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "example": "month"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        }
-      }
-    },
-    "/api/sales/customer-loyalty-stats": {
-      "get": {
-        "summary": "get sales cust stats",
-        "tags": ["customer"],
-        "description": "get sales cust stats",
-        "operationId": "getSalesCustStats",
         "responses": {
           "200": {
             "description": ""

@@ -4,6 +4,7 @@ import Login from "../pages/Login";
 import Home from "../pages/Home";
 import Admin from "../pages/Admin";
 import Sales from "../pages/Sales";
+import ProductDetail from "../pages/ProductDetail";
 // import Inventory from "../pages/Inventory";
 // import Sales from "../pages/Sales";
 import Unauthorized from "../pages/Unauthorized";
@@ -32,6 +33,11 @@ function AppRoutes() {
         {/* Route khusus superadmin */}
         <Route element={<ProtectedRoute allowedRoles={[1]} />}>
           <Route path="/admin" element={<Admin />} />
+        </Route>
+
+        {/* Route khusus superadmin */}
+        <Route element={<ProtectedRoute allowedRoles={[1]} />}>
+          <Route path="/product-details" element={<ProductDetail />} />
         </Route>
 
         {/* Route khusus Owner dan Inventory Staff */}
