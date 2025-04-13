@@ -23,7 +23,9 @@ const Drawer = styled(MuiDrawer)({
 });
 
 export default function SideMenu() {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) return null; // Wait until user is fetched
 
   return (
     <Drawer

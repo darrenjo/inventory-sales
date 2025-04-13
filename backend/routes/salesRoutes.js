@@ -4,6 +4,8 @@ import { authorizePermission } from "../middleware/authPermission.js";
 import {
   getSalesProducts,
   createTransaction,
+  getTransaction,
+  getTransactionById,
   processRefund,
   returnStock,
   getSalesSummary,
@@ -27,6 +29,9 @@ router.post(
   authorizePermission("manage_sales"),
   createTransaction
 );
+
+router.get("/transactions", authenticateToken, getTransaction);
+router.get("/transactions/:id", authenticateToken, getTransactionById);
 
 router.post(
   "/refund",

@@ -7,21 +7,30 @@ import { generateBatchId } from "../utils/generateBatchId.js";
 export const createProduct = async (req, res) => {
   try {
     const { name, category, color_code, sell_price } = req.body;
-    const user = req.user; // Ambil data user dari middleware autentikasi
+    const user = req.user;
 
-    // Validasi apakah kode warna ada di tabel Color
+    // color_code validation from Color tabel
     const color = await Color.findOne({ where: { color_code } });
     if (!color) {
       return res.status(400).json({ error: "Invalid color code" });
     }
 
-    // Cek apakah jenis kain cocok dengan kode warna
+    // color_code must matched with fabric type
     if (color.fabric_type !== name) {
       return res.status(400).json({
         error: `Color code ${color_code} is not valid for fabric type ${name}`,
       });
     }
 
+    // check duplicated color_code in Product tabel
+    const existingProduct = await Product.findOne({ where: { color_code } });
+    if (existingProduct) {
+      return res.status(409).json({
+        error: `Product with color code ${color_code} already exists`,
+      });
+    }
+
+    // Insert
     const product = await Product.create({
       name,
       category,

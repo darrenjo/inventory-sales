@@ -5,12 +5,26 @@ import logger from "../utils/logger.js";
 export const createColor = async (req, res) => {
   try {
     const { color_code, fabric_type, color } = req.body;
-    const user = req.user; // Ambil data user dari middleware autentikasi
+    const user = req.user;
 
     if (!color || !color_code || !fabric_type) {
-      return res
-        .status(400)
-        .json({ error: "color, color_code, and fabric_type are required" });
+      return res.status(400).json({
+        error: "color, color_code, and fabric_type are required",
+      });
+    }
+
+    // check combination fabric_type and color exist
+    const existingColor = await Color.findOne({
+      where: {
+        fabric_type,
+        color,
+      },
+    });
+
+    if (existingColor) {
+      return res.status(400).json({
+        error: `Color "${color}" already exists for fabric type "${fabric_type}"`,
+      });
     }
 
     const colorAdd = await Color.create({

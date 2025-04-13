@@ -1,29 +1,11 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "../context/AuthContext"; // Ambil data user dari context
-import { CircularProgress, Typography, Box } from "@mui/material";
+import LoadingScreen from "../pages/LoadingScreen";
 
 const ProtectedRoute = ({ allowedRoles }: { allowedRoles: number[] }) => {
   const { user, isLoading } = useAuth();
 
-  if (isLoading)
-    return (
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          alignItems: "center",
-          height: "100vh",
-          backgroundColor: "#0A1929", // Dark background
-          color: "white", // Light text
-        }}
-      >
-        <CircularProgress sx={{ color: "#64B5F6" }} /> {/* Light blue loader */}
-        <Typography variant="body1" sx={{ mt: 2, fontWeight: "bold" }}>
-          Fetching data, please wait...
-        </Typography>
-      </Box>
-    ); // Tampilkan loading sementara
+  if (isLoading) return <LoadingScreen />; // Tampilkan loading sementara
 
   if (!user) {
     console.log("🔴 User is null, redirecting to /login");

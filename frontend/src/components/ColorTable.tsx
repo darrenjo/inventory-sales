@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // components/ColorTable.tsx
 import React from "react";
 import { Box, IconButton, Tooltip } from "@mui/material";

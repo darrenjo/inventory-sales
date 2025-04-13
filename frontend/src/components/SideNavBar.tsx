@@ -40,6 +40,11 @@ const SideNavbar: React.FC = () => {
             </Link>
           </li>
           <li className="nav-item">
+            <Link to="/search" className="nav-link text-white">
+              Stocks
+            </Link>
+          </li>
+          <li className="nav-item">
             <button
               className="nav-link text-white bg-transparent border-0"
               onClick={() => setShowLogoutPopup(true)}

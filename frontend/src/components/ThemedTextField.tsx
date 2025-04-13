@@ -1,5 +1,6 @@
 import React from "react";
-import { TextField, useTheme, TextFieldProps } from "@mui/material";
+import TextField, { TextFieldProps } from "@mui/material/TextField";
+import { useTheme } from "@mui/material/styles";
 
 interface ThemedTextFieldProps extends TextFieldProps {
   label: string;
@@ -7,6 +8,10 @@ interface ThemedTextFieldProps extends TextFieldProps {
   onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   required?: boolean;
   type?: string;
+  error?: boolean;
+  helperText?: string;
+  onBlur?: (event: React.FocusEvent<HTMLInputElement>) => void;
+  sx?: TextFieldProps["sx"];
 }
 
 const ThemedTextField: React.FC<ThemedTextFieldProps> = ({
@@ -15,6 +20,9 @@ const ThemedTextField: React.FC<ThemedTextFieldProps> = ({
   onChange,
   required = false,
   type = "text",
+  error = false,
+  helperText = "",
+  onBlur,
   sx,
   ...rest
 }) => {
@@ -27,23 +35,49 @@ const ThemedTextField: React.FC<ThemedTextFieldProps> = ({
       label={label}
       value={value}
       onChange={onChange}
+      onBlur={onBlur}
       required={required}
       type={type}
+      error={error}
+      helperText={helperText}
+      slotProps={{
+        formHelperText: {
+          sx: {
+            marginLeft: 0,
+            marginTop: 0.5,
+            color: error
+              ? theme.palette.error.main
+              : theme.palette.text.secondary,
+          },
+        },
+      }}
       sx={{
         backgroundColor: theme.palette.background.paper,
         borderRadius: 1,
         input: { color: theme.palette.text.primary },
-        "& label": { color: theme.palette.text.secondary },
-        "& label.Mui-focused": { color: theme.palette.primary.main },
+        "& label": {
+          color: error
+            ? theme.palette.error.main
+            : theme.palette.text.secondary,
+        },
+        "& label.Mui-focused": {
+          color: error ? theme.palette.error.main : theme.palette.primary.main,
+        },
         "& .MuiOutlinedInput-root": {
           "& fieldset": {
-            borderColor: theme.palette.divider,
+            borderColor: error
+              ? theme.palette.error.main
+              : theme.palette.divider,
           },
           "&:hover fieldset": {
-            borderColor: theme.palette.primary.light,
+            borderColor: error
+              ? theme.palette.error.light
+              : theme.palette.primary.light,
           },
           "&.Mui-focused fieldset": {
-            borderColor: theme.palette.primary.main,
+            borderColor: error
+              ? theme.palette.error.main
+              : theme.palette.primary.main,
           },
         },
         ...sx,

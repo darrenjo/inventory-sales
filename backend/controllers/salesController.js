@@ -14,6 +14,7 @@ import {
   Return,
   Customer,
   LoyaltyHistory,
+  User,
 } from "../models/index.js";
 
 // ✅ get sales products
@@ -48,6 +49,77 @@ export const getSalesProducts = async (req, res) => {
   } catch (error) {
     logger.error("Error fetching sales products:", error);
     res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+export const getTransaction = async (req, res) => {
+  try {
+    const transactions = await Transaction.findAll({
+      include: [
+        {
+          model: User,
+          as: "sales_staff",
+          attributes: ["id", "username"],
+        },
+        {
+          model: Customer,
+          as: "customer",
+          attributes: ["id", "name"],
+        },
+      ],
+      order: [["createdAt", "DESC"]],
+    });
+
+    res.json(transactions);
+  } catch (error) {
+    logger.error("Error fetching transactions:", error);
+    res.status(500).json({ message: "Failed to get transactions." });
+  }
+};
+
+export const getTransactionById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const transaction = await Transaction.findByPk(id, {
+      include: [
+        {
+          model: User,
+          as: "sales_staff",
+          attributes: ["id", "username"], // not "name" 😏
+        },
+        {
+          model: Customer,
+          as: "customer",
+          attributes: ["id", "name"],
+        },
+        {
+          model: TransactionDetail,
+          attributes: ["id", "quantity", "sell_price_at_time", "createdAt"],
+          include: [
+            {
+              model: Product,
+              attributes: [
+                "id",
+                "name",
+                "category",
+                "color_code",
+                "sell_price",
+              ],
+            },
+          ],
+        },
+      ],
+    });
+
+    if (!transaction) {
+      return res.status(404).json({ message: "Transaction not found" });
+    }
+
+    res.json(transaction);
+  } catch (error) {
+    logger.error("Error fetching transaction by ID:", error);
+    res.status(500).json({ message: "Failed to get transaction details." });
   }
 };
 

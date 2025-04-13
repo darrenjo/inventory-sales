@@ -49,7 +49,7 @@ const Login = () => {
       });
       console.log("User after login:", res.data.user); // Log user data after update
 
-      navigate("/"); // Redirect to home/dashboard
+      navigate("/splash"); // Redirect to home/dashboard
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (err) {
       setError("Invalid username or password");

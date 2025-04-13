@@ -14,28 +14,7 @@ import {
   Alert,
 } from "@mui/material";
 import InventoryTable from "../components/InventoryTable";
-import SideMenu from "../components/SideMenu";
-import AppTheme from "../theme/AppTheme";
 import ProductFormDialog from "../components/ProductFormDialog";
-import CssBaseline from "@mui/material/CssBaseline";
-import type {} from "@mui/x-date-pickers/themeAugmentation";
-import type {} from "@mui/x-charts/themeAugmentation";
-import type {} from "@mui/x-data-grid-pro/themeAugmentation";
-import type {} from "@mui/x-tree-view/themeAugmentation";
-
-import {
-  chartsCustomizations,
-  dataGridCustomizations,
-  datePickersCustomizations,
-  treeViewCustomizations,
-} from "../theme/customizations";
-
-const xThemeComponents = {
-  ...chartsCustomizations,
-  ...dataGridCustomizations,
-  ...datePickersCustomizations,
-  ...treeViewCustomizations,
-};
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -54,7 +33,7 @@ interface InventoryItem {
   Batches: Batch[];
 }
 
-const Products = (props: { disableCustomTheme?: boolean }) => {
+const Products = () => {
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [filteredInventory, setFilteredInventory] = useState<InventoryItem[]>(
     []
@@ -127,76 +106,79 @@ const Products = (props: { disableCustomTheme?: boolean }) => {
   };
 
   return (
-    <AppTheme {...props} themeComponents={xThemeComponents}>
-      <CssBaseline enableColorScheme />
-      <Box display="flex">
-        <SideMenu />
-        <Container maxWidth="lg" sx={{ mt: 4, color: "white" }}>
-          <Paper sx={{ p: 3, backgroundColor: "#0A1929" }}>
-            <Typography variant="h4" sx={{ mb: 2, color: "white" }}>
-              Products
-            </Typography>
+    <Box display="flex">
+      <Container maxWidth="lg" sx={{ mt: 4, color: "white" }}>
+        <Paper sx={{ p: 3, backgroundColor: "#0A1929" }}>
+          <Typography variant="h4" sx={{ mb: 2, color: "white" }}>
+            Products
+          </Typography>
 
-            <Stack
-              spacing={4}
-              sx={{
-                alignItems: "center",
-                mx: 3,
-                pb: 5,
-                mt: { xs: 8, md: 0 },
-              }}
-            >
-              <TextField
-                fullWidth
-                variant="outlined"
-                placeholder="Search product"
-                value={searchTerm}
-                onChange={handleSearchChange}
-                sx={{ mb: 3, backgroundColor: "white", borderRadius: 1 }}
-              />
-              <Button
-                variant="contained"
-                color="primary"
-                sx={{ mt: 4, display: "block", mx: "auto" }}
-                onClick={() => setOpenDialog(true)}
-              >
-                Add New Product
-              </Button>
-            </Stack>
-
-            <InventoryTable inventory={currentPageInventory} />
-
-            <Pagination
-              count={Math.ceil(filteredInventory.length / itemsPerPage)}
-              page={page}
-              onChange={handleChangePage}
-              color="primary"
-              sx={{ mt: 3, display: "flex", justifyContent: "center" }}
-            />
-          </Paper>
-        </Container>
-
-        <ProductFormDialog
-          open={openDialog}
-          onClose={handleDialogClose}
-          onSuccess={handleSuccess}
-        />
-
-        <Snackbar
-          open={snackbarOpen}
-          autoHideDuration={3000}
-          onClose={() => setSnackbarOpen(false)}
-        >
-          <Alert
-            onClose={() => setSnackbarOpen(false)}
-            severity="success"
-            sx={{ width: "100%" }}
+          {/* ✅ Updated layout starts here */}
+          <Stack
+            direction="row"
+            spacing={2}
+            sx={{
+              alignItems: "center",
+              mb: 3,
+              mx: 3,
+              flexWrap: "wrap",
+            }}
           >
-            Produk berhasil ditambahkan!
-          </Alert>
-        </Snackbar>
-      </Box>
-    </AppTheme>
+            <TextField
+              variant="outlined"
+              placeholder="Search product"
+              value={searchTerm}
+              onChange={handleSearchChange}
+              sx={{
+                backgroundColor: "white",
+                borderRadius: 1,
+                flexGrow: 1,
+                minWidth: "250px",
+              }}
+            />
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={() => setOpenDialog(true)}
+              sx={{ whiteSpace: "nowrap" }}
+            >
+              Add New Product
+            </Button>
+          </Stack>
+          {/* ✅ Updated layout ends here */}
+
+          <InventoryTable inventory={currentPageInventory} />
+
+          <Pagination
+            count={Math.ceil(filteredInventory.length / itemsPerPage)}
+            page={page}
+            onChange={handleChangePage}
+            color="primary"
+            sx={{ mt: 3, display: "flex", justifyContent: "center" }}
+          />
+        </Paper>
+      </Container>
+
+      <ProductFormDialog
+        open={openDialog}
+        onClose={handleDialogClose}
+        onSuccess={handleSuccess}
+      />
+
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={3000}
+        onClose={() => setSnackbarOpen(false)}
+      >
+        <Alert
+          onClose={() => setSnackbarOpen(false)}
+          severity="success"
+          sx={{ width: "100%" }}
+        >
+          Product Sucessfully Added!
+        </Alert>
+      </Snackbar>
+    </Box>
   );
 };
 

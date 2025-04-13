@@ -1,38 +1,52 @@
 import { Button, Typography, Box } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import NotFoundSvg from "/assets/notfound.svg";
 
 const NotFound = () => {
   const navigate = useNavigate();
 
+  const pageVariants = {
+    initial: { opacity: 0, y: 40 },
+    animate: { opacity: 1, y: 0 },
+    exit: { opacity: 0, y: -20 },
+  };
+
+  const waveTransition = {
+    scale: {
+      type: "spring",
+      stiffness: 500,
+      damping: 15,
+    },
+  };
+
   return (
     <Box
       component={motion.div}
-      initial={{ opacity: 0, y: 50 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6 }}
+      variants={pageVariants}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+      transition={{ duration: 0.5 }}
       display="flex"
       flexDirection="column"
       alignItems="center"
       justifyContent="center"
-      height="100vh"
+      height="90vh"
       textAlign="center"
       bgcolor="#f9f9f9"
       px={2}
     >
-      <motion.div
-        initial={{ scale: 0.9 }}
+      {/* SVG ILUSTRASI */}
+      <motion.img
+        src={NotFoundSvg}
+        alt="404 Not Found"
+        width={300}
+        initial={{ scale: 0.95 }}
         animate={{ scale: 1 }}
-        transition={{ delay: 0.2, duration: 0.5 }}
-      >
-        {/* SVG Ilustrasi */}
-        <img
-          src="https://undraw.co/api/illustrations/91cfdd93-e14e-4e7b-bd4e-b9e844e0cb43"
-          alt="Not Found Illustration"
-          width={300}
-          style={{ marginBottom: "2rem" }}
-        />
-      </motion.div>
+        transition={{ duration: 0.5, delay: 0.5 }}
+        style={{ marginBottom: "2rem" }}
+      />
 
       <Typography variant="h3" fontWeight="bold" color="primary">
         404
@@ -41,16 +55,22 @@ const NotFound = () => {
         Halaman tidak ditemukan atau sudah dipindahkan.
       </Typography>
 
-      <Button
-        variant="contained"
-        color="primary"
-        size="large"
-        onClick={() => navigate("/")}
+      {/* BUTTON DENGAN EFEK GELONJANG */}
+      <motion.div
+        whileTap={{ scale: 0.95 }}
         whileHover={{ scale: 1.05 }}
-        component={motion.button}
+        transition={waveTransition}
       >
-        Kembali ke Dashboard
-      </Button>
+        <Button
+          variant="contained"
+          color="primary"
+          size="large"
+          onClick={() => navigate("/")}
+          sx={{ px: 4, py: 1.5, fontWeight: "bold", borderRadius: 3 }}
+        >
+          Kembali ke Dashboard
+        </Button>
+      </motion.div>
     </Box>
   );
 };

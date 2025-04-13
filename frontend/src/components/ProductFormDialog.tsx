@@ -15,7 +15,7 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
 }) => {
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>Tambah Produk</DialogTitle>
+      <DialogTitle>Add Product</DialogTitle>
       <DialogContent>
         <AddProductForm onSuccess={onSuccess} />
       </DialogContent>

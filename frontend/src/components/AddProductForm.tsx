@@ -21,6 +21,8 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ onSuccess }) => {
   const [colorOptions, setColorOptions] = useState<
     { color_code: string; color: string; fabric_type: string }[]
   >([]);
+  const [sellPrice, setSellPrice] = useState("");
+
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -44,6 +46,7 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ onSuccess }) => {
         name,
         category,
         color_code: colorCode,
+        sell_price: parseInt(sellPrice),
       });
       onSuccess();
     } catch (error) {
@@ -57,7 +60,7 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ onSuccess }) => {
     <form onSubmit={handleSubmit}>
       <Stack spacing={3} sx={{ my: 2 }}>
         <TextField
-          label="Nama Produk"
+          label="Product Name"
           variant="outlined"
           value={name}
           onChange={(e) => setName(e.target.value)}
@@ -65,7 +68,7 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ onSuccess }) => {
         />
 
         <TextField
-          label="Kategori"
+          label="Category"
           variant="outlined"
           value={category}
           onChange={(e) => setCategory(e.target.value)}
@@ -74,7 +77,7 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ onSuccess }) => {
 
         <TextField
           select
-          label="Kode Warna"
+          label="Color Code"
           value={colorCode}
           onChange={(e) => setColorCode(e.target.value)}
           required
@@ -86,6 +89,15 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ onSuccess }) => {
           ))}
         </TextField>
 
+        <TextField
+          label="Sell Price"
+          variant="outlined"
+          value={sellPrice}
+          onChange={(e) => setSellPrice(e.target.value)}
+          type="number"
+          required
+        />
+
         <Button
           type="submit"
           variant="contained"
@@ -95,7 +107,7 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ onSuccess }) => {
           {isSubmitting ? (
             <CircularProgress size={24} color="inherit" />
           ) : (
-            "Simpan Produk"
+            "Save New Product"
           )}
         </Button>
       </Stack>

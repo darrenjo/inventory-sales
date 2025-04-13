@@ -117,6 +117,13 @@ RolePermission.belongsTo(Permission, { foreignKey: "permissionId" });
 User.belongsTo(Role, { foreignKey: "roleId" });
 Role.hasMany(User, { foreignKey: "roleId" });
 
+Transaction.belongsTo(User, {
+  foreignKey: "sales_staff_id",
+  as: "sales_staff",
+});
+Transaction.belongsTo(Customer, { foreignKey: "customer_id", as: "customer" });
+TransactionDetail.belongsTo(Product, { foreignKey: "product_id" });
+
 const syncDatabase = async () => {
   try {
     await sequelize.sync({ alter: true, force: false });

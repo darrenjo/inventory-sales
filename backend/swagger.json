@@ -34,7 +34,7 @@
     },
     {
       "name": "product",
-      "description": "Everything about your products"
+      "description": "Everything about your productss"
     },
     {
       "name": "stock",
@@ -433,7 +433,7 @@
                         "type": "string",
                         "example": "2025-03-19T04:43:11.596Z"
                       },
-                      "Batches": {
+                      "batches": {
                         "type": "array",
                         "items": {
                           "type": "object",
@@ -995,11 +995,11 @@
                   "properties": {
                     "message": {
                       "type": "string",
-                      "example": "Stock added"
+                      "example": "Transaction completed successfully"
                     },
                     "transactionId": {
                       "type": "string",
-                      "example": "2c126abc-5a61-4854-9a44-450d86b50945"
+                      "example": "284f3d0b-ec73-4c51-ac11-0968c195b544"
                     },
                     "total_price": {
                       "type": "number",
@@ -1095,7 +1095,7 @@
                   "properties": {
                     "message": {
                       "type": "string",
-                      "example": "Stock added"
+                      "example": "Transaction completed successfully"
                     },
                     "transactionId": {
                       "type": "string",

@@ -7,71 +7,59 @@ import {
   Typography,
   Box,
   Paper,
-  MenuItem,
-  Select,
-  InputLabel,
-  FormControl,
   Stack,
   Snackbar,
   Alert,
   Autocomplete,
 } from "@mui/material";
-
 import ThemedTextField from "../components/ThemedTextField";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-const Sales = () => {
+const Stock = () => {
   const [products, setProducts] = useState([]);
-  const [customers, setCustomers] = useState([]);
-
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [quantity, setQuantity] = useState("");
-  const [customerId, setCustomerId] = useState("");
+  const [price, setPrice] = useState("");
 
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error">(
     "success"
   );
+  const [priceTouched, setPriceTouched] = useState(false);
+  const isPriceInvalid =
+    priceTouched && (isNaN(Number(price)) || Number(price) <= 0);
 
   useEffect(() => {
     axios
       .get(`${API_URL}/products/`)
       .then((res) => setProducts(res.data || []));
-    axios
-      .get(`${API_URL}/customers/`)
-      .then((res) => setCustomers(res.data || []));
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const payload = {
-      sales: [
-        {
-          product_id: selectedProduct?.id,
-          quantity: parseInt(quantity),
-        },
-      ],
-      customer_id: customerId || null,
+      product_id: selectedProduct?.id,
+      price: parseInt(price),
+      quantity: parseInt(quantity),
     };
 
     try {
-      await axios.post(`${API_URL}/sales/transactions`, payload);
+      await axios.post(`${API_URL}/products/stock`, payload);
 
-      setSnackbarMessage("🎉 Transaction submitted successfully!");
+      setSnackbarMessage("✅ Stock added successfully!");
       setSnackbarSeverity("success");
       setSnackbarOpen(true);
 
       // Reset fields
       setSelectedProduct(null);
+      setPrice("");
       setQuantity("");
-      setCustomerId("");
     } catch (err) {
       console.error(err);
-
-      setSnackbarMessage("❌ Failed to submit transaction.");
+      setSnackbarMessage("❌ Failed to add stock.");
       setSnackbarSeverity("error");
       setSnackbarOpen(true);
     }
@@ -106,7 +94,7 @@ const Sales = () => {
           elevation={6}
         >
           <Typography variant="h4" gutterBottom align="center">
-            Sales Transaction
+            Add Product Stock
           </Typography>
 
           <form onSubmit={handleSubmit}>
@@ -116,7 +104,7 @@ const Sales = () => {
                 disablePortal
                 options={products}
                 getOptionLabel={(option: any) =>
-                  `${option.name} - ${option.color_code}`
+                  `${option.name} - ${option.color_code} (${option.color_name})`
                 }
                 isOptionEqualToValue={(option, value) => option.id === value.id}
                 value={selectedProduct}
@@ -146,31 +134,23 @@ const Sales = () => {
                 onChange={(e) => setQuantity(e.target.value)}
                 required
                 type="number"
+                error={isNaN(Number(quantity)) || Number(quantity) <= 0}
               />
 
-              <FormControl fullWidth>
-                <InputLabel id="customer-label" sx={{ color: "white" }}>
-                  Customer (optional)
-                </InputLabel>
-                <Select
-                  labelId="customer-label"
-                  value={customerId}
-                  label="Customer"
-                  onChange={(e) => setCustomerId(e.target.value)}
-                  sx={{
-                    color: "white",
-                    backgroundColor: "#132F4C",
-                    borderRadius: 1,
-                  }}
-                >
-                  <MenuItem value="">None</MenuItem>
-                  {customers.map((customer: any) => (
-                    <MenuItem key={customer.id} value={customer.id}>
-                      {customer.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+              <ThemedTextField
+                label="Price"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                required
+                type="number"
+                onBlur={() => setPriceTouched(true)}
+                error={isPriceInvalid}
+                helperText={
+                  isPriceInvalid
+                    ? "Harga harus lebih dari 0"
+                    : "Masukkan harga jual dalam rupiah"
+                }
+              />
 
               <Button
                 type="submit"
@@ -178,7 +158,7 @@ const Sales = () => {
                 color="primary"
                 sx={{ py: 1.5 }}
               >
-                Submit Transaction
+                Add Stock
               </Button>
             </Stack>
           </form>
@@ -200,7 +180,7 @@ const Sales = () => {
             fontWeight: "bold",
             color: "white",
             backgroundColor:
-              snackbarSeverity === "success" ? "#4caf50" : "#f44336", // green or red
+              snackbarSeverity === "success" ? "#4caf50" : "#f44336",
           }}
         >
           {snackbarMessage}
@@ -210,4 +190,4 @@ const Sales = () => {
   );
 };
 
-export default Sales;
+export default Stock;

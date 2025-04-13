@@ -18,27 +18,6 @@ import { DataGrid, GridRowId } from "@mui/x-data-grid";
 import ColorTable from "../components/ColorTable";
 import AddIcon from "@mui/icons-material/Add";
 import { api } from "../services/api";
-import SideMenu from "../components/SideMenu";
-import AppTheme from "../theme/AppTheme";
-import CssBaseline from "@mui/material/CssBaseline";
-import type {} from "@mui/x-date-pickers/themeAugmentation";
-import type {} from "@mui/x-charts/themeAugmentation";
-import type {} from "@mui/x-data-grid-pro/themeAugmentation";
-import type {} from "@mui/x-tree-view/themeAugmentation";
-
-import {
-  chartsCustomizations,
-  dataGridCustomizations,
-  datePickersCustomizations,
-  treeViewCustomizations,
-} from "../theme/customizations";
-
-const xThemeComponents = {
-  ...chartsCustomizations,
-  ...dataGridCustomizations,
-  ...datePickersCustomizations,
-  ...treeViewCustomizations,
-};
 
 interface Color {
   id: string;
@@ -48,7 +27,7 @@ interface Color {
 }
 const API_URL = import.meta.env.VITE_API_URL;
 
-const ColorCatalogue = (props: { disableCustomTheme?: boolean }) => {
+const ColorCatalogue = () => {
   const [colors, setColors] = useState<Color[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [openDialog, setOpenDialog] = useState<boolean>(false);
@@ -175,133 +154,129 @@ const ColorCatalogue = (props: { disableCustomTheme?: boolean }) => {
   };
 
   return (
-    <AppTheme {...props} themeComponents={xThemeComponents}>
-      <CssBaseline enableColorScheme />
-      <Box display="flex">
-        <SideMenu />
-        <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-          <Paper
-            elevation={3}
-            sx={{ p: 3, backgroundColor: "#0A1929", color: "white" }}
+    <Box display="flex">
+      <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+        <Paper
+          elevation={3}
+          sx={{ p: 3, backgroundColor: "#0A1929", color: "white" }}
+        >
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              mb: 3,
+            }}
           >
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                mb: 3,
-              }}
+            <Typography variant="h4" fontWeight="bold">
+              Color Management
+            </Typography>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={handleOpenDialog}
             >
-              <Typography variant="h4" fontWeight="bold">
-                Color Management
-              </Typography>
-              <Button
-                variant="contained"
-                startIcon={<AddIcon />}
-                onClick={handleOpenDialog}
-              >
-                Add New Color
-              </Button>
+              Add New Color
+            </Button>
+          </Box>
+          {loading ? (
+            <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+              <CircularProgress />
             </Box>
-            {loading ? (
-              <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
-                <CircularProgress />
-              </Box>
-            ) : (
-              <ColorTable
-                colors={colors}
-                onDelete={handleDelete}
-                onEditRow={handleRowEditCommit}
-              />
-            )}
-          </Paper>
-          <Dialog
-            open={openDialog}
-            onClose={handleCloseDialog}
-            PaperProps={{ sx: { backgroundColor: "#0A1929", color: "white" } }}
-          >
-            <DialogTitle>Add New Color</DialogTitle>
-            <DialogContent>
-              <Box sx={{ pt: 1, width: 400, maxWidth: "100%" }}>
-                {["color_code", "fabric_type", "color"].map((field) => (
-                  <TextField
-                    key={field}
-                    fullWidth
-                    margin="normal"
-                    label={field
-                      .replace(/_/g, " ")
-                      .replace(/\b\w/g, (l) => l.toUpperCase())}
-                    name={field}
-                    value={newColor[field as keyof typeof newColor]}
-                    onChange={handleInputChange}
-                    error={!!formErrors[field as keyof typeof formErrors]}
-                    helperText={formErrors[field as keyof typeof formErrors]}
-                    InputLabelProps={{
-                      sx: { color: "rgba(255, 255, 255, 0.7)" },
-                    }}
-                    sx={{
-                      "& .MuiOutlinedInput-root": {
-                        "& fieldset": {
-                          borderColor: "rgba(255, 255, 255, 0.23)",
-                        },
-                        "&:hover fieldset": {
-                          borderColor: "rgba(255, 255, 255, 0.5)",
-                        },
-                        "&.Mui-focused fieldset": { borderColor: "#1976d2" },
+          ) : (
+            <ColorTable
+              colors={colors}
+              onDelete={handleDelete}
+              onEditRow={handleRowEditCommit}
+            />
+          )}
+        </Paper>
+        <Dialog
+          open={openDialog}
+          onClose={handleCloseDialog}
+          PaperProps={{ sx: { backgroundColor: "#0A1929", color: "white" } }}
+        >
+          <DialogTitle>Add New Color</DialogTitle>
+          <DialogContent>
+            <Box sx={{ pt: 1, width: 400, maxWidth: "100%" }}>
+              {["color_code", "fabric_type", "color"].map((field) => (
+                <TextField
+                  key={field}
+                  fullWidth
+                  margin="normal"
+                  label={field
+                    .replace(/_/g, " ")
+                    .replace(/\b\w/g, (l) => l.toUpperCase())}
+                  name={field}
+                  value={newColor[field as keyof typeof newColor]}
+                  onChange={handleInputChange}
+                  error={!!formErrors[field as keyof typeof formErrors]}
+                  helperText={formErrors[field as keyof typeof formErrors]}
+                  InputLabelProps={{
+                    sx: { color: "rgba(255, 255, 255, 0.7)" },
+                  }}
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      "& fieldset": {
+                        borderColor: "rgba(255, 255, 255, 0.23)",
                       },
-                      "& .MuiInputBase-input": { color: "white" },
-                    }}
-                  />
-                ))}
-                {newColor.color_code && newColor.color_code.startsWith("#") && (
+                      "&:hover fieldset": {
+                        borderColor: "rgba(255, 255, 255, 0.5)",
+                      },
+                      "&.Mui-focused fieldset": { borderColor: "#1976d2" },
+                    },
+                    "& .MuiInputBase-input": { color: "white" },
+                  }}
+                />
+              ))}
+              {newColor.color_code && newColor.color_code.startsWith("#") && (
+                <Box
+                  sx={{
+                    mt: 2,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 2,
+                  }}
+                >
+                  <Typography>Color Preview:</Typography>
                   <Box
                     sx={{
-                      mt: 2,
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 2,
+                      width: 36,
+                      height: 36,
+                      backgroundColor: newColor.color_code,
+                      border: "1px solid white",
+                      borderRadius: "4px",
                     }}
-                  >
-                    <Typography>Color Preview:</Typography>
-                    <Box
-                      sx={{
-                        width: 36,
-                        height: 36,
-                        backgroundColor: newColor.color_code,
-                        border: "1px solid white",
-                        borderRadius: "4px",
-                      }}
-                    />
-                  </Box>
-                )}
-              </Box>
-            </DialogContent>
-            <DialogActions sx={{ px: 3, pb: 2 }}>
-              <Button onClick={handleCloseDialog} sx={{ color: "white" }}>
-                Cancel
-              </Button>
-              <Button variant="contained" onClick={handleSubmit}>
-                Save
-              </Button>
-            </DialogActions>
-          </Dialog>
-          <Snackbar
-            open={snackbar.open}
-            autoHideDuration={3000}
+                  />
+                </Box>
+              )}
+            </Box>
+          </DialogContent>
+          <DialogActions sx={{ px: 3, pb: 2 }}>
+            <Button onClick={handleCloseDialog} sx={{ color: "white" }}>
+              Cancel
+            </Button>
+            <Button variant="contained" onClick={handleSubmit}>
+              Save
+            </Button>
+          </DialogActions>
+        </Dialog>
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={3000}
+          onClose={handleCloseSnackbar}
+          anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+        >
+          <Alert
             onClose={handleCloseSnackbar}
-            anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+            severity={snackbar.severity as any}
+            sx={{ width: "100%" }}
           >
-            <Alert
-              onClose={handleCloseSnackbar}
-              severity={snackbar.severity as any}
-              sx={{ width: "100%" }}
-            >
-              {alertMessage}
-            </Alert>
-          </Snackbar>
-        </Container>
-      </Box>
-    </AppTheme>
+            {alertMessage}
+          </Alert>
+        </Snackbar>
+      </Container>
+    </Box>
   );
 };
 

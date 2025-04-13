@@ -18,6 +18,7 @@ const Product = sequelize.define("Product", {
     type: DataTypes.STRING,
     allowNull: false,
     references: { model: Color, key: "color_code" },
+    unique: true,
   }, // Kode warna unik berdasarkan jenis kain
   sell_price: {
     type: DataTypes.INTEGER,
