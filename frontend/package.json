@@ -12,8 +12,6 @@
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
-    "@mantine/core": "^7.17.3",
-    "@mantine/hooks": "^7.17.3",
     "@mui/icons-material": "^6.4.8",
     "@mui/material": "^6.4.8",
     "@mui/x-charts": "latest",
@@ -32,6 +30,7 @@
     "dayjs": "latest",
     "formik": "^2.4.6",
     "framer-motion": "^12.6.3",
+    "html2pdf.js": "^0.10.3",
     "lodash.debounce": "^4.0.8",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

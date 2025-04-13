@@ -6,7 +6,6 @@ import { alpha } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
-import Header from "../components/Header";
 import MainGrid from "../components/MainGrid";
 
 const Dashboard = () => {
@@ -31,7 +30,6 @@ const Dashboard = () => {
               mt: { xs: 8, md: 0 },
             }}
           >
-            <Header />
             <MainGrid />
           </Stack>
         </Box>

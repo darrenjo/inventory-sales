@@ -2,19 +2,19 @@ import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import debounce from "lodash.debounce";
 import {
+  Divider,
   TextField,
   Button,
   Pagination,
-  Container,
   Typography,
   Box,
-  Paper,
   Stack,
   Snackbar,
   Alert,
 } from "@mui/material";
 import InventoryTable from "../components/InventoryTable";
 import ProductFormDialog from "../components/ProductFormDialog";
+import { useAuth } from "../context/AuthContext";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -45,6 +45,9 @@ const Products = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
 
+  const { user } = useAuth(); 
+  const roleId = user?.roleId;
+
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
     debounceSearch(e.target.value);
@@ -67,6 +70,7 @@ const Products = () => {
           item.Batches?.reduce((sum, batch) => sum + batch.quantity, 0) || 0,
       }));
       setInventory(processedData);
+      console.log(roleId)
     } catch (error) {
       console.error("Error fetching inventory:", error);
     }
@@ -106,17 +110,24 @@ const Products = () => {
   };
 
   return (
-    <Box display="flex">
-      <Container maxWidth="lg" sx={{ mt: 4, color: "white" }}>
-        <Paper sx={{ p: 3, backgroundColor: "#0A1929" }}>
-          <Typography variant="h4" sx={{ mb: 2, color: "white" }}>
+        <Box
+          component="main"
+          sx={{
+            px: 2,
+            py: 4,
+            // backgroundColor: primary,
+            minHeight: "65vh",
+            color: "white",
+          }}
+        >
+          <Typography variant="h4" sx={{mb: 2}}>
             Products
           </Typography>
+          <Divider sx={{ borderColor: 'rgba(255,255,255,0.2)', mb: 3 }} />
 
-          {/* ✅ Updated layout starts here */}
           <Stack
             direction="row"
-            spacing={2}
+            spacing={6}
             sx={{
               alignItems: "center",
               mb: 3,
@@ -133,7 +144,7 @@ const Products = () => {
                 backgroundColor: "white",
                 borderRadius: 1,
                 flexGrow: 1,
-                minWidth: "250px",
+                minWidth: "300px",
               }}
             />
             <Button
@@ -141,11 +152,11 @@ const Products = () => {
               color="primary"
               onClick={() => setOpenDialog(true)}
               sx={{ whiteSpace: "nowrap" }}
+              disabled={roleId == 4}
             >
               Add New Product
             </Button>
           </Stack>
-          {/* ✅ Updated layout ends here */}
 
           <InventoryTable inventory={currentPageInventory} />
 
@@ -156,8 +167,6 @@ const Products = () => {
             color="primary"
             sx={{ mt: 3, display: "flex", justifyContent: "center" }}
           />
-        </Paper>
-      </Container>
 
       <ProductFormDialog
         open={openDialog}

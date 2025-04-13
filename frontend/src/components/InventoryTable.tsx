@@ -139,10 +139,8 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
         <DataGrid
           rows={rows}
           columns={columns}
-          pageSizeOptions={[5, 10, 20]}
+          // pageSizeOptions={[5, 10, 20]}
           initialState={{ pagination: { paginationModel: { pageSize: 5 } } }}
-          disableColumnResize
-          density="compact"
           onRowClick={handleRowClick}
           sx={{
             color: "white",

@@ -1,15 +1,13 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Login from "../pages/Login";
 import Dashboard from "../pages/Dashboard";
-// import Home from "../pages/HomePage";
 import Admin from "../pages/Admin";
 import Sales from "../pages/Sales";
 import ColorCatalogue from "../pages/ColorCatalogue";
 import Products from "../pages/Products";
 import ProductDetail from "../pages/ProductDetail";
 import Stock from "../pages/Stock";
-// import Inventory from "../pages/Inventory";
-// import Sales from "../pages/Sales";
+import Customers from "../pages/Customers";
 import Unauthorized from "../pages/Unauthorized";
 import ProtectedRoute from "../routes/ProtectedRoute";
 import SplashScreen from "../pages/SplashScreen";
@@ -17,6 +15,8 @@ import NotFound from "../pages/NotFound";
 import { AnimatePresence } from "framer-motion";
 import MainLayout from "../layouts/MainLayout";
 import TransactionList from "../pages/TransactionList";
+import TransactionDetail from "../pages/TransactionDetail";
+import PrintableReceipt from "../pages/PrintableReceipt";
 
 // function App() {
 //   return (
@@ -110,6 +110,9 @@ const mainRoutes = () => (
     <Route path="/color-catalogue" element={<ColorCatalogue />} />
     <Route path="/stock" element={<Stock />} />
     <Route path="/transactions" element={<TransactionList />} />
+    <Route path="/customers" element={<Customers />} />
+    <Route path="/transactions/:id" element={<TransactionDetail />} />
+    <Route path="/print" element={<PrintableReceipt />} />
   </>
 );
 

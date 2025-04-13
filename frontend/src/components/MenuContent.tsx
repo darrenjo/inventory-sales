@@ -14,34 +14,19 @@ import InfoRoundedIcon from "@mui/icons-material/InfoRounded";
 import HelpRoundedIcon from "@mui/icons-material/HelpRounded";
 import { useAuth } from "../context/AuthContext";
 
-// const mainListItems = [
-//   { text: "Dashboard", icon: <HomeRoundedIcon />, route: "/" },
-//   { text: "Products", icon: <AnalyticsRoundedIcon />, route: "/products" },
-//   { text: "Sales", icon: <PeopleRoundedIcon />, route: "/sales" },
-//   { text: "Color Catalogue", icon: <AssignmentRoundedIcon />,route: "/color-catalogue" },
-//   { text: "Stocks", icon: <AssignmentRoundedIcon />, route: "/stock" },
-// ];
-
-// const secondaryListItems = [
-//   { text: "Settings", icon: <SettingsRoundedIcon />, route: "/settings" },
-//   { text: "About", icon: <InfoRoundedIcon />, route: "/about" },
-//   { text: "Feedback", icon: <HelpRoundedIcon />, route: "/feedback" },
-// ];
-
 export default function MenuContent() {
-  const { user } = useAuth(); // Get the role from context
+  const { user } = useAuth(); // ambil role dari authcontext
   const navigate = useNavigate();
   const location = useLocation();
 
   const roleId = user?.roleId;
-
-  // Define what roles can access each item
   const mainListItems = [
     { text: "Dashboard", icon: <HomeRoundedIcon />, route: "/", roles: [1, 2, 3, 4] },
     { text: "Products", icon: <AnalyticsRoundedIcon />, route: "/products", roles: [1, 2, 3, 4] },
     { text: "Sales", icon: <PeopleRoundedIcon />, route: "/sales", roles: [1, 2, 4] },
     { text: "Color Catalogue", icon: <AssignmentRoundedIcon />, route: "/color-catalogue", roles: [1, 2, 3, 4] },
     { text: "Stocks", icon: <AssignmentRoundedIcon />, route: "/stock", roles: [1, 2, 3] },
+    { text: "Customers", icon: <PeopleRoundedIcon />, route: "/customers", roles: [1, 2] },
   ];
 
   const secondaryListItems = [
