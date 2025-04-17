@@ -75,7 +75,7 @@ const PrintableReceipt: React.FC = () => {
         <Typography>Date: {formatDate(transaction.createdAt)}</Typography>
         <Typography>Staff: {transaction.sales_staff.username}</Typography>
         <Typography>
-          Customer: {transaction.customer?.username || "Guest"}
+          Customer: {transaction.customer?.name || "Guest"}
         </Typography>
 
         <Box my={1}>

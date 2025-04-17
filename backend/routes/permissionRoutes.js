@@ -4,8 +4,12 @@ import {
   createPermission,
   updatePermission,
   deletePermission,
-  assignPermissionToRole,
-  removePermissionFromRole,
+  // assignPermissionToRole,
+  assignMultiplePermissionsToRole,
+  // removePermissionFromRole,
+  removeMultiplePermissionsFromRole,
+  getPermissionsForRole,
+  replacePermissionsForRole,
 } from "../controllers/permissionController.js";
 import { authenticateToken } from "../middleware/auth.js";
 import { authorizePermission } from "../middleware/authPermission.js";
@@ -38,17 +42,42 @@ router.delete(
   deletePermission
 );
 
+// router.post(
+//   "/:id/assign-permission",
+//   authenticateToken,
+//   authorizePermission("manage_roles"),
+//   assignPermissionToRole
+// );
 router.post(
-  "/:id/assign-permission",
+  "/roles/:id/assign-permission",
   authenticateToken,
   authorizePermission("manage_roles"),
-  assignPermissionToRole
+  assignMultiplePermissionsToRole
 );
+// router.post(
+//   "/:id/remove-permission",
+//   authenticateToken,
+//   authorizePermission("manage_roles"),
+//   removePermissionFromRole
+// );
 router.post(
   "/:id/remove-permission",
   authenticateToken,
   authorizePermission("manage_roles"),
-  removePermissionFromRole
+  removeMultiplePermissionsFromRole
+);
+
+router.get(
+  "/roles/:id/permissions",
+  authenticateToken,
+  authorizePermission("manage_roles"),
+  getPermissionsForRole
+);
+router.put(
+  "/roles/:id/permissions",
+  authenticateToken,
+  authorizePermission("manage_roles"),
+  replacePermissionsForRole
 );
 
 export default router;

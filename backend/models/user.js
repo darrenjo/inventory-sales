@@ -19,6 +19,11 @@ const User = sequelize.define("User", {
       key: "id",
     },
   },
+  is_active: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: true,
+  },
 });
 
 User.beforeCreate(async (user) => {

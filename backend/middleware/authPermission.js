@@ -1,30 +1,34 @@
-import { Permission, RolePermission } from "../models/index.js";
+import { Role, Permission } from "../models/index.js";
 import logger from "../utils/logger.js";
 
-export const authorizePermission =
-  (requiredPermission) => async (req, res, next) => {
+export const authorizePermission = (requiredPermission) => {
+  return async (req, res, next) => {
     try {
-      const userRoleId = req.user.roleId; // Role ID dari user
+      const userRoleId = req.user.roleId;
 
-      // Ambil semua permission yang dimiliki oleh role user
-      const rolePermissions = await RolePermission.findAll({
-        where: { roleId: userRoleId },
-        include: [{ model: Permission }],
+      // Ambil Role beserta daftar Permission-nya
+      const role = await Role.findByPk(userRoleId, {
+        include: [{ model: Permission, attributes: ["name"] }],
       });
 
-      // Ambil daftar nama permission dari hasil query
-      const userPermissions = rolePermissions.map((rp) => rp.Permission.name);
-
-      // Cek apakah permission yang dibutuhkan ada dalam daftar user
-      if (!userPermissions.includes(requiredPermission)) {
-        return res
-          .status(403)
-          .json({ error: "Forbidden: You don't have permission" });
+      if (!role) {
+        return res.status(404).json({ error: "Role not found" });
       }
 
-      next(); // Jika lolos, lanjut ke controller
+      // Bungkus permission ke dalam Set
+      const permissionSet = new Set(role.Permissions.map((p) => p.name));
+
+      // Cek apakah permission yang dibutuhkan ada dalam set
+      if (!permissionSet.has(requiredPermission)) {
+        return res.status(403).json({
+          error: "Forbidden: You don't have the required permission",
+        });
+      }
+
+      next(); // Lanjut ke route handler
     } catch (error) {
-      logger.error("Authorization error:", error);
+      logger.error("❌ Authorization error:", error);
       res.status(500).json({ error: "Internal Server Error" });
     }
   };
+};

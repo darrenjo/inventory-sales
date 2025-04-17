@@ -34,7 +34,8 @@ interface TransactionDetail {
 
 interface User {
   id: string;
-  username: string;
+  username?: string;
+  name?: string;
 }
 
 interface Transaction {
@@ -124,7 +125,12 @@ const TransactionDetailPage: React.FC = () => {
           <strong>Sales Staff:</strong> {transaction.sales_staff.username}
         </Typography>
         <Typography>
-          <strong>Customer:</strong> {transaction.customer?.username ?? "Guest"}
+          <strong>Customer:</strong>{" "}
+          {transaction.customer
+            ? transaction.customer.username ||
+              transaction.customer.name ||
+              `ID: ${transaction.customer_id}`
+            : "Guest"}
         </Typography>
         <Typography>
           <strong>Total Price:</strong> Rp{" "}

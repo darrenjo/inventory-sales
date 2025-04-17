@@ -5,13 +5,13 @@ import {
   Divider,
   TextField,
   Button,
-  Pagination,
   Typography,
   Box,
   Stack,
   Snackbar,
   Alert,
 } from "@mui/material";
+import AddCircleIcon from "@mui/icons-material/AddCircle";
 import InventoryTable from "../components/InventoryTable";
 import ProductFormDialog from "../components/ProductFormDialog";
 import { useAuth } from "../context/AuthContext";
@@ -94,14 +94,6 @@ const Products = () => {
     (page - 1) * itemsPerPage,
     page * itemsPerPage
   );
-
-  const handleChangePage = (
-    _event: React.ChangeEvent<unknown>,
-    value: number
-  ) => {
-    setPage(value);
-  };
-
   const handleDialogClose = () => setOpenDialog(false);
   const handleSuccess = () => {
     fetchInventory();
@@ -150,9 +142,18 @@ const Products = () => {
             <Button
               variant="contained"
               color="primary"
+              startIcon={<AddCircleIcon />}
               onClick={() => setOpenDialog(true)}
-              sx={{ whiteSpace: "nowrap" }}
+              sx={{ 
+                whiteSpace: "nowrap",
+                py: 1.5,
+                '&.Mui-disabled': {
+                    backgroundColor: '#132F4C',
+                    color: 'grey',
+                },
+              }}
               disabled={roleId == 4}
+              
             >
               Add New Product
             </Button>
@@ -160,13 +161,13 @@ const Products = () => {
 
           <InventoryTable inventory={currentPageInventory} />
 
-          <Pagination
+          {/* <Pagination
             count={Math.ceil(filteredInventory.length / itemsPerPage)}
             page={page}
             onChange={handleChangePage}
             color="primary"
             sx={{ mt: 3, display: "flex", justifyContent: "center" }}
-          />
+          /> */}
 
       <ProductFormDialog
         open={openDialog}

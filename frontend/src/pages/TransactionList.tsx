@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { Box, Typography } from "@mui/material";
+import { Box, Typography, Divider } from "@mui/material";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -21,7 +21,8 @@ interface Transaction {
   };
   customer?: {
     id: string;
-    username: string;
+    username?: string;
+    name?: string;
   } | null;
 }
 
@@ -32,21 +33,32 @@ const TransactionsPage: React.FC = () => {
   useEffect(() => {
     const fetchTransactions = async () => {
       try {
-        // const res = await axios.get(`${API_URL}/sales/transactions`);
-        // console.log("API Response", res.data); // <== Tambahin log ini
-        // setTransactions(res.data); // ✅ harus array of objects
-        // console.log("API Response JSON", JSON.stringify(res.data, null, 2));
         const res = await axios.get(`${API_URL}/sales/transactions`);
-        const mapped = res.data.map((t: Transaction) => ({
-          ...t,
-          salesStaffName: t.sales_staff?.username || "-",
-          customerName: t.customer?.username || "Guest",
-          // formattedDate: new Date(t.createdAt).toLocaleString(),
-          formattedDate: new Date(t.createdAt).toLocaleString(),
-          rawDate: new Date(t.createdAt),
-        }));
+
+        // First log the raw data to see its structure
+        console.log("Raw API Response:", res.data);
+
+        const mapped = res.data.map((t: Transaction) => {
+          console.log(
+            "Processing transaction:",
+            t.id,
+            "Customer data:",
+            t.customer
+          );
+
+          return {
+            ...t,
+            salesStaffName: t.sales_staff?.username || "-",
+            // More thorough check of customer data structure
+            customerName: t.customer
+              ? t.customer.username || t.customer.name || `ID: ${t.customer_id}`
+              : "Guest",
+            formattedDate: new Date(t.createdAt).toLocaleString(),
+            rawDate: new Date(t.createdAt),
+          };
+        });
+
         setTransactions(mapped);
-        console.log(mapped);
       } catch (err) {
         console.error("Failed to fetch transactions", err);
       }
@@ -95,9 +107,11 @@ const TransactionsPage: React.FC = () => {
 
   return (
     <Box p={3}>
-      <Typography variant="h5" gutterBottom>
+      <Typography variant="h4" gutterBottom>
         Transaction List
       </Typography>
+      <Divider sx={{ borderColor: 'rgba(255,255,255,0.2)', mb: 3 }} />
+      
       {transactions.length > 0 ? (
         <DataGrid
           rows={transactions}

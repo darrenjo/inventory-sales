@@ -19,7 +19,7 @@ const router = express.Router();
 router.get(
   "/products",
   authenticateToken,
-  authorizePermission("manage_sales"),
+  // authorizePermission("manage_sales"),
   getSalesProducts
 );
 

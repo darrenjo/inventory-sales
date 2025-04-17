@@ -12,13 +12,6 @@ import {
 
 const router = express.Router();
 
-// router.post(
-//   "/",
-//   authenticateToken,
-//   authorizeRole(["inventory_staff", "superadmin"]),
-//   createProduct
-// );
-
 router.post(
   "/",
   authenticateToken,

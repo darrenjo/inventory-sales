@@ -18,7 +18,17 @@ router.post(
   createColor
 );
 
-router.patch("/:color_code", authenticateToken, updateColor);
-router.delete("/:color_code", authenticateToken, deleteColor);
+router.patch(
+  "/:color_code",
+  authenticateToken,
+  authorizePermission("manage_products"),
+  updateColor
+);
+router.delete(
+  "/:color_code",
+  authenticateToken,
+  authorizePermission("manage_products"),
+  deleteColor
+);
 
 export default router;

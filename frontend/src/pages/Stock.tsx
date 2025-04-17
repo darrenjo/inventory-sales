@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import InputAdornment from '@mui/material/InputAdornment';
+import InputAdornment from "@mui/material/InputAdornment";
 import {
   Divider,
   TextField,
@@ -23,12 +23,47 @@ const Stock = () => {
   const [price, setPrice] = useState("");
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
-  const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error">("success");
+  const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error">(
+    "success"
+  );
   const [priceTouched, setPriceTouched] = useState(false);
-  const isPriceInvalid = priceTouched && (isNaN(Number(price)) || Number(price) <= 0);
+  const isPriceInvalid =
+    priceTouched && (isNaN(Number(price)) || Number(price) <= 0);
+  const [colorOptions, setColorOptions] = useState<
+    { color_code: string; color: string; fabric_type: string }[]
+  >([]);
 
   useEffect(() => {
-    axios.get(`${API_URL}/products/`).then((res) => setProducts(res.data || []));
+    const fetchData = async () => {
+      try {
+        // Fetch both products and color codes in parallel
+        const [productRes, colorRes] = await Promise.all([
+          axios.get(`${API_URL}/products/`),
+          axios.get(`${API_URL}/colors`),
+        ]);
+
+        const rawProducts = productRes.data || [];
+        const colors = colorRes.data || [];
+
+        // Create a map for quick color_code -> fabric_type lookup
+        const colorMap = new Map(
+          colors.map((color: any) => [color.color_code, color.color])
+        );
+
+        // Enrich each product with fabric_type
+        const enrichedProducts = rawProducts.map((product: any) => ({
+          ...product,
+          color_name: colorMap.get(product.color_code) || "Unknown",
+        }));
+
+        // Set the enriched products to state
+        setProducts(enrichedProducts);
+      } catch (error) {
+        console.error("Error fetching products or colors:", error);
+      }
+    };
+
+    fetchData();
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -56,7 +91,10 @@ const Stock = () => {
     }
   };
 
-  const handleSnackbarClose = (_event?: React.SyntheticEvent | Event, reason?: string) => {
+  const handleSnackbarClose = (
+    _event?: React.SyntheticEvent | Event,
+    reason?: string
+  ) => {
     if (reason === "clickaway") return;
     setSnackbarOpen(false);
   };
@@ -72,10 +110,10 @@ const Stock = () => {
         color: "white",
       }}
     >
-      <Typography variant="h4" sx={{mb: 2}}>
+      <Typography variant="h4" sx={{ mb: 2 }}>
         Add Product Stock
       </Typography>
-      <Divider sx={{ borderColor: 'rgba(255,255,255,0.2)', mb: 3 }} />
+      <Divider sx={{ borderColor: "rgba(255,255,255,0.2)", mb: 3 }} />
 
       <form onSubmit={handleSubmit}>
         <Stack spacing={5} maxWidth="600px" sx={{ mt: 4 }}>
@@ -90,13 +128,13 @@ const Stock = () => {
             value={selectedProduct}
             onChange={(_event, newValue) => setSelectedProduct(newValue)}
             sx={{
-              '& .MuiAutocomplete-popupIndicator': {
-                backgroundColor: '#132F4C',
-                borderRadius: '15px',
-                color: 'white',
-                border: 'none', 
-                '&:hover': {
-                  backgroundColor: '#1a3e66',
+              "& .MuiAutocomplete-popupIndicator": {
+                backgroundColor: "#132F4C",
+                borderRadius: "15px",
+                color: "white",
+                border: "none",
+                "&:hover": {
+                  backgroundColor: "#1a3e66",
                 },
               },
             }}
@@ -107,15 +145,15 @@ const Stock = () => {
                 required
                 type="search"
                 sx={{
-                  input: { color: "white" },
-                  label: { color: "white" },
+                  "& .MuiInputLabel-root": {
+                    transform: "translate(14px, 10px) scale(1)",
+                  },
+                  "& .MuiInputLabel-shrink": {
+                    transform: "translate(5px, -18px) scale(0.75)",
+                  },
                   "& .MuiOutlinedInput-root": {
                     backgroundColor: "#132F4C",
                     borderRadius: 1,
-                  },
-                  '& .MuiInputLabel-shrink': {
-                  top: -35,
-                  transform: 'translateY(50%)',
                   },
                 }}
               />
@@ -128,36 +166,42 @@ const Stock = () => {
             onChange={(e) => setQuantity(e.target.value)}
             required
             type="number"
-            error={isNaN(Number(quantity)) || Number(quantity) <= 0}
+            error={
+              quantity !== "" &&
+              (isNaN(Number(quantity)) || Number(quantity) <= 0)
+            }
             helperText="Must be larger than 0"
             sx={{
-              input: { color: "white" },
-              label: { color: "white" },
+              "& .MuiInputLabel-root": {
+                transform: "translate(14px, 10px) scale(1)",
+              },
+              "& .MuiInputLabel-shrink": {
+                transform: "translate(5px, -18px) scale(0.75)",
+              },
               "& .MuiOutlinedInput-root": {
                 backgroundColor: "#132F4C",
-                borderRadius: 1,
-              },
-              '& .MuiInputLabel-shrink': {
-              top: -35,
-              transform: 'translateY(50%)',
               },
             }}
           />
 
           <TextField
-            label="Price"
+            label="Buy Stock Price"
             value={price}
             onChange={(e) => setPrice(e.target.value)}
             required
             type="number"
             onBlur={() => setPriceTouched(true)}
-            error={isPriceInvalid}
+            error={price !== "" && isPriceInvalid}
             helperText={
-              isPriceInvalid ? "Price must be bigger than 0" : "Input Price in Rupiah"
+              isPriceInvalid
+                ? "Price must be bigger than 0"
+                : "Input Price in Rupiah"
             }
             slotProps={{
               input: {
-                startAdornment: <InputAdornment position="start">Rp</InputAdornment>,
+                startAdornment: (
+                  <InputAdornment position="start">Rp</InputAdornment>
+                ),
               },
             }}
             sx={{
@@ -167,14 +211,19 @@ const Stock = () => {
                 backgroundColor: "#132F4C",
                 borderRadius: 1,
               },
-              '& .MuiInputLabel-shrink': {
-              top: -35,
-              transform: 'translateY(50%)',
+              "& .MuiInputLabel-shrink": {
+                top: -35,
+                transform: "translateY(50%)",
               },
             }}
           />
 
-          <Button type="submit" variant="contained" color="primary" sx={{ py: 1.5 }}>
+          <Button
+            type="submit"
+            variant="contained"
+            color="primary"
+            sx={{ py: 1.5 }}
+          >
             Add Stock
           </Button>
         </Stack>
@@ -194,7 +243,8 @@ const Stock = () => {
             width: "100%",
             fontWeight: "bold",
             color: "white",
-            backgroundColor: snackbarSeverity === "success" ? "#4caf50" : "#f44336",
+            backgroundColor:
+              snackbarSeverity === "success" ? "#4caf50" : "#f44336",
           }}
         >
           {snackbarMessage}

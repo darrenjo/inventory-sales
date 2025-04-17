@@ -4,6 +4,7 @@ import sequelize from "../config/database.js";
 import { reduceStockFIFO } from "../utils/reduceStockFIFO.js";
 import { generateBatchId } from "../utils/generateBatchId.js";
 import { calculateDiscountAndPoints } from "../utils/transactionUtils.js";
+import crypto from "crypto";
 import {
   Product,
   Batch,
@@ -20,6 +21,13 @@ import {
 // ✅ get sales products
 export const getSalesProducts = async (req, res) => {
   try {
+    const user = req.user;
+
+    logger.info(`Request to fetch products for sales`, {
+      userId: user?.id,
+      username: user?.username,
+    });
+
     const products = await Product.findAll({
       attributes: [
         "id",
@@ -31,8 +39,8 @@ export const getSalesProducts = async (req, res) => {
       include: [
         {
           model: Batch,
-          attributes: [], // Tidak perlu memasukkan atribut Batch langsung
-          where: { quantity: { [Op.gt]: 0 } }, // Hanya ambil batch dengan stok > 0
+          attributes: [],
+          where: { quantity: { [Op.gt]: 0 } }, // Only get batches with stock > 0
           required: false,
         },
       ],
@@ -45,15 +53,31 @@ export const getSalesProducts = async (req, res) => {
       order: [["name", "ASC"]],
     });
 
+    logger.info(`Successfully fetched ${products.length} products for sales`, {
+      userId: user?.id,
+      count: products.length,
+    });
+
     res.json(products);
   } catch (error) {
-    logger.error("Error fetching sales products:", error);
+    logger.error(`Error fetching sales products: ${error.message}`, {
+      stack: error.stack,
+      userId: req.user?.id,
+    });
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
 
+// ✅ get transactions
 export const getTransaction = async (req, res) => {
   try {
+    const user = req.user;
+
+    logger.info(`Request to fetch all transactions`, {
+      userId: user?.id,
+      username: user?.username,
+    });
+
     const transactions = await Transaction.findAll({
       include: [
         {
@@ -70,23 +94,39 @@ export const getTransaction = async (req, res) => {
       order: [["createdAt", "DESC"]],
     });
 
+    logger.info(`Successfully fetched ${transactions.length} transactions`, {
+      userId: user?.id,
+      count: transactions.length,
+    });
+
     res.json(transactions);
   } catch (error) {
-    logger.error("Error fetching transactions:", error);
+    logger.error(`Error fetching transactions: ${error.message}`, {
+      stack: error.stack,
+      userId: req.user?.id,
+    });
     res.status(500).json({ message: "Failed to get transactions." });
   }
 };
 
+// ✅ get transaction details by ID
 export const getTransactionById = async (req, res) => {
   try {
     const { id } = req.params;
+    const user = req.user;
+
+    logger.info(`Request to fetch transaction with ID: ${id}`, {
+      userId: user?.id,
+      username: user?.username,
+      transactionId: id,
+    });
 
     const transaction = await Transaction.findByPk(id, {
       include: [
         {
           model: User,
           as: "sales_staff",
-          attributes: ["id", "username"], // not "name" 😏
+          attributes: ["id", "username"],
         },
         {
           model: Customer,
@@ -113,12 +153,27 @@ export const getTransactionById = async (req, res) => {
     });
 
     if (!transaction) {
+      logger.warn(`Transaction not found: ${id}`, {
+        userId: user?.id,
+        requestedId: id,
+      });
       return res.status(404).json({ message: "Transaction not found" });
     }
 
+    logger.info(`Successfully fetched transaction: ${id}`, {
+      userId: user?.id,
+      transactionId: id,
+      items: transaction.TransactionDetails?.length || 0,
+      totalPrice: transaction.total_price,
+    });
+
     res.json(transaction);
   } catch (error) {
-    logger.error("Error fetching transaction by ID:", error);
+    logger.error(`Error fetching transaction by ID: ${error.message}`, {
+      stack: error.stack,
+      transactionId: req.params.id,
+      userId: req.user?.id,
+    });
     res.status(500).json({ message: "Failed to get transaction details." });
   }
 };
@@ -126,75 +181,125 @@ export const getTransactionById = async (req, res) => {
 // ✅ create transaction
 export const createTransaction = async (req, res) => {
   const { sales, customer_id } = req.body; // sales: [{ product_id, quantity }]
-  const salesStaffId = req.user.id; // Ambil ID Sales Staff dari token
+  const salesStaffId = req.user.id;
+  const user = req.user;
+
+  logger.info(`Transaction creation attempt by ${user.username}`, {
+    userId: user.id,
+    username: user.username,
+    customerId: customer_id,
+    items: sales?.length || 0,
+  });
 
   if (!sales || sales.length === 0) {
-    logger.warn("Transaction failed: Sales data is required");
+    logger.warn(`Transaction failed: Sales data is required`, {
+      userId: user.id,
+      username: user.username,
+      requestBody: req.body,
+    });
     return res.status(400).json({ error: "Sales data is required" });
   }
 
-  const transaction = await sequelize.transaction();
+  const dbTransaction = await sequelize.transaction();
   try {
     let totalPrice = 0;
 
-    const transactionId = crypto.randomUUID(); // Generate UUID untuk transaksi
-    logger.info(`Transaction started. ID: ${transactionId}`);
+    const transactionId = crypto.randomUUID(); // Generate UUID for transaction
+    logger.info(`Transaction started with ID: ${transactionId}`, {
+      userId: user.id,
+      username: user.username,
+      transactionId: transactionId,
+    });
 
-    // 1. Cek apakah pelanggan ada di sistem (Opsional)
+    // 1. Check if customer exists in system (Optional)
     let customer = null;
     if (customer_id) {
       customer = await Customer.findByPk(customer_id);
       if (!customer) {
+        logger.warn(`Transaction failed: Customer not found`, {
+          userId: user.id,
+          customerId: customer_id,
+        });
+        await dbTransaction.rollback();
         return res
           .status(400)
           .json({ error: `Customer with ID ${customer_id} not found` });
       }
+
+      logger.info(`Customer found: ${customer.name} (ID: ${customer.id})`, {
+        userId: user.id,
+        customerId: customer.id,
+        customerName: customer.name,
+      });
     }
-    // 2. Ambil total belanja pelanggan sebelum transaksi
+
+    // 2. Get customer total spending before transaction
     const totalSpentBefore = customer ? customer.total_spent || 0 : 0;
 
-    // 3. Simpan transaksi utama dengan harga sementara
+    // 3. Save main transaction with temporary price
     await Transaction.create(
       {
         id: transactionId,
         customer_id: customer ? customer.id : null,
         sales_staff_id: salesStaffId,
-        total_price: 0, // Harga sementara
+        total_price: 0, // Temporary price
         discount: 0,
         points_earned: 0,
       },
-      { transaction }
+      { transaction: dbTransaction }
     );
 
+    // Process each product in the sale
     for (const item of sales) {
       const { product_id, quantity } = item;
 
       if (!product_id || !quantity || quantity <= 0) {
+        logger.warn(`Transaction failed: Invalid product data`, {
+          userId: user.id,
+          productId: product_id,
+          quantity: quantity,
+        });
         throw new Error("Invalid product data in sales");
       }
 
-      logger.info(`Processing product: ${product_id}, Quantity: ${quantity}`);
+      logger.info(`Processing product: ${product_id}, Quantity: ${quantity}`, {
+        userId: user.id,
+        transactionId: transactionId,
+        productId: product_id,
+        quantity: quantity,
+      });
 
-      // Ambil harga jual produk
+      // Get product sell price
       const product = await Product.findByPk(product_id);
-      if (!product) throw new Error(`Product with ID ${product_id} not found`);
+      if (!product) {
+        logger.warn(`Transaction failed: Product not found`, {
+          userId: user.id,
+          productId: product_id,
+        });
+        throw new Error(`Product with ID ${product_id} not found`);
+      }
 
       const sellPriceAtTime = product.sell_price;
       totalPrice += sellPriceAtTime * quantity;
 
-      // Kurangi stok sesuai FIFO
+      // Reduce stock according to FIFO
       const stockUsage = await reduceStockFIFO(
         product_id,
         quantity,
-        transaction,
+        dbTransaction,
         salesStaffId
       );
 
       if (!Array.isArray(stockUsage) || stockUsage.length === 0) {
+        logger.warn(`Transaction failed: Stock reduction failed`, {
+          userId: user.id,
+          productId: product_id,
+          quantity: quantity,
+        });
         throw new Error(`Stock reduction failed for product ID ${product_id}`);
       }
 
-      // 4. Simpan detail transaksi
+      // 4. Save transaction details
       await TransactionDetail.create(
         {
           id: crypto.randomUUID(),
@@ -204,10 +309,10 @@ export const createTransaction = async (req, res) => {
           sell_price_at_time: sellPriceAtTime,
           batch_id: stockUsage[0].batch_id,
         },
-        { transaction }
+        { transaction: dbTransaction }
       );
 
-      // 5. Catat di StockHistory
+      // 5. Record in StockHistory
       for (const batch of stockUsage) {
         await StockHistory.create(
           {
@@ -218,7 +323,17 @@ export const createTransaction = async (req, res) => {
             createdAt: new Date(),
             by_who: salesStaffId,
           },
-          { transaction }
+          { transaction: dbTransaction }
+        );
+
+        logger.debug(
+          `Stock reduced: Batch ${batch.batch_id}, Quantity: ${batch.used_quantity}`,
+          {
+            userId: user.id,
+            batchId: batch.batch_id,
+            productId: product_id,
+            quantity: batch.used_quantity,
+          }
         );
       }
     }
@@ -228,46 +343,43 @@ export const createTransaction = async (req, res) => {
     let finalPrice = totalPrice;
     let pointsEarned = 0;
 
-    // 6. Hitung diskon dan poin hanya jika customer ada
+    // 6. Calculate discount and points only if customer exists
     if (customer) {
       ({ membership, discount, finalPrice, pointsEarned } =
         calculateDiscountAndPoints(totalPrice, totalSpentBefore));
-      logger.info(
-        `Customer ${customer_id} has membership: ${membership.level} with ${
-          membership.discount * 100
-        }% discount`
-      );
+
+      logger.info(`Applied loyalty discount for customer: ${customer.name}`, {
+        userId: user.id,
+        customerId: customer.id,
+        membershipLevel: membership.level,
+        discountPercentage: membership.discount * 100,
+        discountAmount: discount,
+        pointsEarned: pointsEarned,
+      });
     }
 
-    // const { membership, discount, finalPrice, pointsEarned } =
-    //   calculateDiscountAndPoints(totalPrice, totalSpentBefore);
-
-    logger.info(
-      `Customer ${customer_id} has membership: ${membership.level} with ${
-        membership.discount * 100
-      }% discount`
-    );
-
+    // Update transaction with final price details
     await Transaction.update(
       { total_price: totalPrice, discount, points_earned: pointsEarned },
-      { where: { id: transactionId }, transaction }
+      { where: { id: transactionId }, transaction: dbTransaction }
     );
 
+    // Update customer data if applicable
     if (customer) {
       await Customer.update(
         {
           total_spent: totalSpentBefore + totalPrice,
           last_transaction_at: new Date(),
-          points: sequelize.literal(`points + ${pointsEarned}`), // Tambah poin
+          points: sequelize.literal(`points + ${pointsEarned}`),
         },
-        { where: { id: customer_id }, transaction }
+        { where: { id: customer_id }, transaction: dbTransaction }
       );
 
-      // 7. Simpan history poin pelanggan
+      // 7. Save customer loyalty point history
       const latestPoints = await LoyaltyHistory.findOne({
         where: { customer_id },
         order: [["createdAt", "DESC"]],
-        transaction,
+        transaction: dbTransaction,
       });
 
       const totalPointsAfter = latestPoints
@@ -283,12 +395,31 @@ export const createTransaction = async (req, res) => {
           total_points_after: totalPointsAfter,
           createdAt: new Date(),
         },
-        { transaction }
+        { transaction: dbTransaction }
       );
+
+      logger.info(`Customer loyalty updated: ${customer.name}`, {
+        userId: user.id,
+        customerId: customer.id,
+        newTotalSpent: totalSpentBefore + totalPrice,
+        newPoints: totalPointsAfter,
+        pointsEarned: pointsEarned,
+      });
     }
 
-    await transaction.commit();
-    logger.info(`Transaction committed successfully. ID: ${transactionId}`);
+    await dbTransaction.commit();
+
+    logger.info(`Transaction completed successfully: ${transactionId}`, {
+      userId: user.id,
+      username: user.username,
+      transactionId: transactionId,
+      itemCount: sales.length,
+      totalPrice: totalPrice,
+      discount: discount,
+      finalPrice: finalPrice,
+      pointsEarned: pointsEarned,
+      customerId: customer?.id,
+    });
 
     res.json({
       message: "Transaction completed successfully",
@@ -299,57 +430,103 @@ export const createTransaction = async (req, res) => {
       points_earned: pointsEarned,
     });
   } catch (error) {
-    await transaction.rollback();
-    logger.error(`Transaction failed: ${error.message}`);
+    await dbTransaction.rollback();
+
+    logger.error(`Transaction failed: ${error.message}`, {
+      stack: error.stack,
+      userId: user.id,
+      username: user.username,
+      requestBody: req.body,
+    });
+
     res
       .status(500)
       .json({ error: `Error processing transaction: ${error.message}` });
   }
 };
 
-// ✅ Proses REFUND (Barang dikembalikan & uang dikembalikan)
+// ✅ Process REFUND (Return items & refund money)
 export const processRefund = async (req, res) => {
   const { transaction_id, product_id, quantity } = req.body;
   const user = req.user;
 
-  const transaction = await sequelize.transaction();
+  logger.info(`Refund attempt for transaction: ${transaction_id}`, {
+    userId: user.id,
+    username: user.username,
+    transactionId: transaction_id,
+    productId: product_id,
+    quantity: quantity,
+  });
+
+  const dbTransaction = await sequelize.transaction();
   try {
-    // Cek transaksi asli
+    // Check original transaction
     const transactionDetail = await TransactionDetail.findOne({
       where: { transaction_id, product_id },
-      transaction,
+      transaction: dbTransaction,
     });
 
     if (!transactionDetail) {
+      logger.warn(`Refund failed: Transaction detail not found`, {
+        userId: user.id,
+        transactionId: transaction_id,
+        productId: product_id,
+      });
+      await dbTransaction.rollback();
       throw new Error("Transaction detail not found");
     }
 
     if (quantity > transactionDetail.quantity) {
+      logger.warn(`Refund failed: Quantity exceeds original sale`, {
+        userId: user.id,
+        transactionId: transaction_id,
+        productId: product_id,
+        requestedQuantity: quantity,
+        originalQuantity: transactionDetail.quantity,
+      });
+      await dbTransaction.rollback();
       throw new Error("Refund quantity exceeds original sale");
     }
 
-    // Cari batch asli atau buat batch baru
+    // Find original batch or create new batch
     let originalBatch = await Batch.findOne({
       where: { id: transactionDetail.batch_id },
-      transaction,
+      transaction: dbTransaction,
     });
 
     if (originalBatch) {
-      // Jika batch masih ada, tambahkan stok kembali
+      // If batch still exists, add stock back
       originalBatch.quantity += quantity;
-      await originalBatch.save({ transaction });
+      await originalBatch.save({ transaction: dbTransaction });
+
+      logger.info(`Stock returned to existing batch: ${originalBatch.id}`, {
+        userId: user.id,
+        batchId: originalBatch.id,
+        productId: product_id,
+        quantity: quantity,
+        newBatchQuantity: originalBatch.quantity,
+      });
     } else {
-      // Jika batch sudah habis, buat batch baru dengan harga jual sebelumnya
+      // If batch is exhausted, create new batch with previous sell price
+      const newBatchId = generateBatchId(product_id);
       await Batch.create(
         {
-          id: generateBatchId(product_id),
+          id: newBatchId,
           product_id,
-          price: transactionDetail.sell_price_at_time, // Harga jual saat transaksi
+          price: transactionDetail.sell_price_at_time,
           quantity,
           by_who: user.id,
         },
-        { transaction }
+        { transaction: dbTransaction }
       );
+
+      logger.info(`Created new batch for returned stock: ${newBatchId}`, {
+        userId: user.id,
+        batchId: newBatchId,
+        productId: product_id,
+        quantity: quantity,
+        price: transactionDetail.sell_price_at_time,
+      });
     }
 
     // Update StockHistory
@@ -360,72 +537,122 @@ export const processRefund = async (req, res) => {
           : generateBatchId(product_id),
         product_id,
         price_per_unit: transactionDetail.sell_price_at_time,
-        quantity, // Positif karena barang masuk kembali
+        quantity, // Positive because stock is returned
         by_who: user.id,
         createdAt: new Date(),
       },
-      { transaction }
+      { transaction: dbTransaction }
     );
 
     if (quantity <= 0) {
+      logger.warn(`Refund failed: Invalid refund quantity`, {
+        userId: user.id,
+        quantity: quantity,
+      });
+      await dbTransaction.rollback();
       throw new Error("Invalid refund quantity");
     }
 
-    // Catat pengembalian uang
+    // Record money return
+    const refundAmount = quantity * transactionDetail.sell_price_at_time;
     await Refund.create(
       {
         transaction_id,
         product_id,
         quantity,
-        refund_amount: quantity * transactionDetail.sell_price_at_time,
+        refund_amount: refundAmount,
         refunded_by: user.id,
         refunded_at: new Date(),
       },
-      { transaction }
+      { transaction: dbTransaction }
     );
 
-    await transaction.commit();
+    await dbTransaction.commit();
+
     logger.info(
-      `Refund processed: ${quantity} units of Product ID ${product_id} from Transaction ID ${transaction_id}`
+      `Refund processed successfully for transaction: ${transaction_id}`,
+      {
+        userId: user.id,
+        username: user.username,
+        transactionId: transaction_id,
+        productId: product_id,
+        quantity: quantity,
+        refundAmount: refundAmount,
+      }
     );
-    res.json({ message: "Refund processed successfully" });
+
+    res.json({
+      message: "Refund processed successfully",
+      transaction_id,
+      product_id,
+      quantity,
+      refund_amount: refundAmount,
+    });
   } catch (error) {
-    await transaction.rollback();
-    logger.error(`Error processing refund: ${error.message}`);
+    await dbTransaction.rollback();
+
+    logger.error(`Error processing refund: ${error.message}`, {
+      stack: error.stack,
+      userId: user.id,
+      username: user.username,
+      transactionId: transaction_id,
+      productId: product_id,
+      quantity: quantity,
+    });
+
     res
       .status(500)
       .json({ error: `Error processing refund: ${error.message}` });
   }
 };
 
-// ✅ Proses Retur Barang (Mengembalikan ke Stok)
+// ✅ Process Returns (Return items to stock)
 export const returnStock = async (req, res) => {
-  const transaction = await sequelize.transaction();
+  const { transaction_id, product_id, quantity, reason } = req.body;
+  const user = req.user;
+
+  logger.info(`Return stock attempt for transaction: ${transaction_id}`, {
+    userId: user.id,
+    username: user.username,
+    transactionId: transaction_id,
+    productId: product_id,
+    quantity: quantity,
+    reason: reason,
+  });
+
+  const dbTransaction = await sequelize.transaction();
   try {
-    const { transaction_id, product_id, quantity, reason } = req.body;
-    const user = req.user;
-
-    logger.info(
-      `Processing return: Transaction ${transaction_id}, Product ${product_id}, Quantity ${quantity}`
-    );
-
-    // Cek transaksi & produk
+    // Check transaction & product
     const existingTransaction = await Transaction.findByPk(transaction_id);
     const product = await Product.findByPk(product_id);
 
     if (!existingTransaction || !product) {
+      logger.warn(`Return failed: Transaction or Product not found`, {
+        userId: user.id,
+        transactionId: transaction_id,
+        productId: product_id,
+        transactionExists: !!existingTransaction,
+        productExists: !!product,
+      });
+      await dbTransaction.rollback();
       return res
         .status(404)
         .json({ error: "Transaction or Product not found" });
     }
 
-    // Cari detail transaksi untuk mengetahui batch asal
+    // Find transaction details to identify original batch
     const transactionDetail = await TransactionDetail.findOne({
       where: { transaction_id, product_id },
-      transaction,
+      transaction: dbTransaction,
     });
 
     if (!transactionDetail) {
+      logger.warn(`Return failed: Transaction detail not found`, {
+        userId: user.id,
+        transactionId: transaction_id,
+        productId: product_id,
+      });
+      await dbTransaction.rollback();
       throw new Error(
         "Transaction detail not found, cannot determine batch_id"
       );
@@ -433,33 +660,50 @@ export const returnStock = async (req, res) => {
 
     const originalBatch = await Batch.findOne({
       where: { id: transactionDetail.batch_id || null },
-      transaction,
+      transaction: dbTransaction,
     });
 
     if (!originalBatch) {
       logger.warn(
-        `No original batch found for batch_id: ${transactionDetail.batch_id}`
+        `No original batch found for return: ${transactionDetail.batch_id}`,
+        {
+          userId: user.id,
+          batchId: transactionDetail.batch_id,
+        }
       );
     }
 
-    // Ambil harga batch asal atau harga jual saat transaksi
-    const batchPrice = originalBatch.price;
+    // Get original batch price or transaction-time price
+    const batchPrice =
+      originalBatch?.price || transactionDetail.sell_price_at_time;
 
     if (!batchPrice) {
+      logger.warn(`Return failed: Cannot determine price for batch creation`, {
+        userId: user.id,
+        transactionId: transaction_id,
+        productId: product_id,
+      });
+      await dbTransaction.rollback();
       throw new Error("Price for batch creation cannot be determined");
     }
 
-    // Generate batch ID baru dengan suffix `_RET`
-    const returnBatchId = `${originalBatch.id}_RET`;
+    // Generate new batch ID with "_RET" suffix
+    const returnBatchId = originalBatch
+      ? `${originalBatch.id}_RET`
+      : `${product_id}_RET_${Date.now()}`;
 
-    // Cari batch retur yang sudah ada (jika ada)
+    // Find existing return batch if any
     let returnBatch = await Batch.findOne({
       where: { product_id, status: "returned" },
-      transaction,
+      transaction: dbTransaction,
     });
 
     if (!returnBatch) {
-      logger.info(`Creating new return batch for product ${product_id}`);
+      logger.info(`Creating new return batch: ${returnBatchId}`, {
+        userId: user.id,
+        productId: product_id,
+        batchId: returnBatchId,
+      });
 
       returnBatch = await Batch.create(
         {
@@ -470,15 +714,15 @@ export const returnStock = async (req, res) => {
           by_who: user.id,
           status: "returned",
         },
-        { transaction }
+        { transaction: dbTransaction }
       );
     }
 
-    // Tambahkan barang retur ke batch retur
+    // Add returned items to return batch
     returnBatch.quantity += quantity;
-    await returnBatch.save({ transaction });
+    await returnBatch.save({ transaction: dbTransaction });
 
-    // Simpan data retur
+    // Save return data
     const newReturn = await Return.create(
       {
         transaction_id,
@@ -488,10 +732,10 @@ export const returnStock = async (req, res) => {
         reason,
         returned_by: user.id,
       },
-      { transaction }
+      { transaction: dbTransaction }
     );
 
-    // Simpan di StockHistory
+    // Save in StockHistory
     await StockHistory.create(
       {
         batch_id: returnBatch.id,
@@ -500,36 +744,77 @@ export const returnStock = async (req, res) => {
         quantity,
         by_who: user.id,
       },
-      { transaction }
+      { transaction: dbTransaction }
     );
 
-    await transaction.commit();
+    await dbTransaction.commit();
+
     logger.info(
-      `Product ${product_id} returned successfully: ${quantity} units`
+      `Return processed successfully for transaction: ${transaction_id}`,
+      {
+        userId: user.id,
+        username: user.username,
+        transactionId: transaction_id,
+        productId: product_id,
+        productName: product.name,
+        quantity: quantity,
+        returnBatchId: returnBatch.id,
+        reason: reason,
+      }
     );
-    res
-      .status(201)
-      .json({ message: "Return processed successfully", newReturn });
+
+    res.status(201).json({
+      message: "Return processed successfully",
+      return: {
+        id: newReturn.id,
+        transaction_id,
+        product_id,
+        quantity,
+        reason,
+      },
+    });
   } catch (error) {
-    await transaction.rollback();
-    logger.error("Error processing return:", error);
+    await dbTransaction.rollback();
+
+    logger.error(`Error processing return: ${error.message}`, {
+      stack: error.stack,
+      userId: user.id,
+      username: user.username,
+      transactionId: transaction_id,
+      productId: product_id,
+      quantity: quantity,
+    });
+
     res
       .status(500)
       .json({ error: "Internal Server Error", details: error.message });
   }
 };
 
+// ✅ Get sales summary
 export const getSalesSummary = async (req, res) => {
   try {
     const { range } = req.query;
+    const user = req.user;
 
-    // Validasi range yang diperbolehkan
+    logger.info(`Request for sales summary with range: ${range}`, {
+      userId: user?.id,
+      username: user?.username,
+      range: range,
+    });
+
+    // Validate allowed ranges
     const allowedRanges = ["daily", "monthly", "yearly"];
     if (!allowedRanges.includes(range)) {
+      logger.warn(`Invalid range parameter: ${range}`, {
+        userId: user?.id,
+        invalidRange: range,
+        allowedRanges: allowedRanges,
+      });
       return res.status(400).json({ error: "Invalid range parameter" });
     }
 
-    // Mapping range ke format PostgreSQL DATE_TRUNC
+    // Map range to PostgreSQL DATE_TRUNC format
     const dateTruncFormat = {
       daily: "day",
       monthly: "month",
@@ -549,16 +834,38 @@ export const getSalesSummary = async (req, res) => {
       }
     );
 
+    logger.info(
+      `Sales summary fetched successfully: ${salesData.length} records`,
+      {
+        userId: user?.id,
+        range: range,
+        recordCount: salesData.length,
+      }
+    );
+
     res.json({ range, data: salesData });
   } catch (error) {
-    logger.error(`❌ Error fetching sales summary: ${error.message}`);
+    logger.error(`Error fetching sales summary: ${error.message}`, {
+      stack: error.stack,
+      range: req.query.range,
+      userId: req.user?.id,
+    });
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
 
+// ✅ Get sales by category
 export const getSalesByCategory = async (req, res) => {
   try {
     const { range } = req.query;
+    const user = req.user;
+
+    logger.info(`Request for sales by category with range: ${range}`, {
+      userId: user?.id,
+      username: user?.username,
+      range: range,
+    });
+
     const allowedRanges = ["daily", "monthly", "yearly"];
     const dateTruncFormat = {
       daily: "day",
@@ -566,7 +873,7 @@ export const getSalesByCategory = async (req, res) => {
       yearly: "year",
     };
 
-    // Default ke monthly jika tidak ada range
+    // Default to monthly if no range specified
     const rangeType = allowedRanges.includes(range)
       ? dateTruncFormat[range]
       : "month";
@@ -588,16 +895,37 @@ export const getSalesByCategory = async (req, res) => {
       }
     );
 
+    logger.info(
+      `Sales by category fetched successfully: ${salesData.length} records`,
+      {
+        userId: user?.id,
+        range: range || "monthly",
+        recordCount: salesData.length,
+      }
+    );
+
     res.json({ range: range || "monthly", data: salesData });
   } catch (error) {
-    logger.error(`❌ Error fetching sales by category: ${error.message}`);
+    logger.error(`Error fetching sales by category: ${error.message}`, {
+      stack: error.stack,
+      range: req.query.range,
+      userId: req.user?.id,
+    });
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
 
+// ✅ Get sales by staff
 export const getSalesByStaff = async (req, res) => {
   try {
     const { rangeType } = req.query; // day, week, month
+    const user = req.user;
+
+    logger.info(`Request for sales by staff with range: ${rangeType}`, {
+      userId: user?.id,
+      username: user?.username,
+      range: rangeType,
+    });
 
     const salesData = await sequelize.query(
       `
@@ -616,12 +944,25 @@ export const getSalesByStaff = async (req, res) => {
       }
     );
 
+    logger.info(
+      `Sales by staff fetched successfully: ${salesData.length} records`,
+      {
+        userId: user?.id,
+        range: rangeType,
+        recordCount: salesData.length,
+      }
+    );
+
     res.json({
       message: "Sales by staff fetched successfully",
       data: salesData,
     });
   } catch (error) {
-    logger.error("❌ Error fetching sales by staff: " + error.message);
+    logger.error(`Error fetching sales by staff: ${error.message}`, {
+      stack: error.stack,
+      rangeType: req.query.rangeType,
+      userId: req.user?.id,
+    });
     res.status(500).json({ error: "Internal Server Error" });
   }
 };

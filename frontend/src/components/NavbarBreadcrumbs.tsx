@@ -10,33 +10,92 @@ const StyledBreadcrumbs = styled(Breadcrumbs)(({ theme }) => ({
   },
 }));
 
-const customBreadcrumbsMap: Record<string, { label: string; to?: string }[]> = {
+// Define routes with placeholders
+const customBreadcrumbsMap: Record<
+  string,
+  {
+    label: string | ((params: Record<string, string>) => string);
+    to?: string;
+  }[]
+> = {
   "/product-details": [
     { label: "Products", to: "/products" },
     { label: "Product Details" },
   ],
-  "/sales/create": [
-    { label: "Sales", to: "/sales" },
-    { label: "Create Sale" },
+  "/sales/create": [{ label: "Sales", to: "/sales" }, { label: "Create Sale" }],
+  "/transactions/:id": [
+    { label: "Transactions", to: "/transactions" },
+    { label: (params) => `Transaction #${params.id}` },
   ],
-  // Add more as needed
 };
+
+// Utility to extract params from dynamic path
+function matchPath(
+  pattern: string,
+  pathname: string
+): null | Record<string, string> {
+  const patternParts = pattern.split("/").filter(Boolean);
+  const pathParts = pathname.split("/").filter(Boolean);
+
+  if (patternParts.length !== pathParts.length) return null;
+  const params: Record<string, string> = {};
+
+  for (let i = 0; i < patternParts.length; i++) {
+    const pPart = patternParts[i];
+    const pathPart = pathParts[i];
+
+    if (pPart.startsWith(":")) {
+      params[pPart.slice(1)] = pathPart;
+    } else if (pPart !== pathPart) {
+      return null;
+    }
+  }
+  return params;
+}
+
+// Utility to format pathname like 'user-management' -> 'User Management'
+function formatPathname(pathname: string): string {
+  const cleaned = pathname.replace("/", "");
+  return cleaned
+    .split("-")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
 
 export default function NavbarBreadcrumbs() {
   const location = useLocation();
   const pathname = location.pathname;
 
-  const customItems = customBreadcrumbsMap[pathname];
+  let matchedPattern = null;
+  let params: Record<string, string> = {};
+
+  for (const pattern of Object.keys(customBreadcrumbsMap)) {
+    const result = matchPath(pattern, pathname);
+    if (result) {
+      matchedPattern = pattern;
+      params = result;
+      break;
+    }
+  }
+
+  const customItems = matchedPattern
+    ? customBreadcrumbsMap[matchedPattern]
+    : null;
 
   return (
-    <StyledBreadcrumbs separator={<NavigateNextIcon fontSize="small" />} aria-label="breadcrumb">
+    <StyledBreadcrumbs
+      separator={<NavigateNextIcon fontSize="small" />}
+      aria-label="breadcrumb"
+    >
       <Link component={RouterLink} underline="hover" color="inherit" to="/">
         Dashboard
       </Link>
 
       {customItems ? (
-        customItems.map((item, index) =>
-          item.to ? (
+        customItems.map((item, index) => {
+          const label =
+            typeof item.label === "function" ? item.label(params) : item.label;
+          return item.to ? (
             <Link
               key={index}
               component={RouterLink}
@@ -44,18 +103,17 @@ export default function NavbarBreadcrumbs() {
               color="inherit"
               to={item.to}
             >
-              {item.label}
+              {label}
             </Link>
           ) : (
             <Typography color="text.primary" fontWeight={600} key={index}>
-              {item.label}
+              {label}
             </Typography>
-          )
-        )
+          );
+        })
       ) : (
-        // fallback default breadcrumb if no match found
         <Typography color="text.primary" fontWeight={600}>
-          {pathname.replace("/", "").charAt(0).toUpperCase() + pathname.slice(2)}
+          {formatPathname(pathname)}
         </Typography>
       )}
     </StyledBreadcrumbs>

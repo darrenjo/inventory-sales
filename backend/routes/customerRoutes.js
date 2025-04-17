@@ -1,5 +1,5 @@
 import express from "express";
-import { authenticateToken, authorizeRole } from "../middleware/auth.js";
+import { authenticateToken } from "../middleware/auth.js";
 import {
   getCustomerById,
   addCustomer,

@@ -49,7 +49,7 @@ const SplashScreen = () => {
             textShadow: "0 0 10px #64B5F6",
           }}
         >
-          testtestes
+          Fetching Data...
         </Typography>
       </motion.div>
 

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from "react";
 import {
   Card,
@@ -6,55 +7,67 @@ import {
   Button,
   Typography,
   Box,
+  CircularProgress,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import { api, checkAuth } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 
 const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const { setUser } = useAuth(); // Get setUser from context
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { login, user, isLoading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    const verifyUser = async () => {
-      const isAuthenticated = await checkAuth(); // Check if user is logged in
-      console.log("User authenticated?", isAuthenticated);
-
-      if (isAuthenticated) {
-        navigate("/"); // Redirect to home/dashboard if already logged in
-      }
-    };
-    verifyUser();
-  }, [navigate]);
+    if (user && !isLoading) {
+      console.log("User already logged in, redirecting to home");
+      navigate("/splash");
+    }
+  }, [isLoading, navigate, user]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setIsSubmitting(true);
 
     try {
-      const res = await api.post(
-        "/auth/login",
-        { username, password },
-        { withCredentials: true }
-      );
-
-      console.log("Login response:", res.data); // Log the login response
-
-      setUser({
-        ...res.data.user,
-        roleId: res.data.user.role, // Map role to roleId
-      });
-      console.log("User after login:", res.data.user); // Log user data after update
-
-      navigate("/splash"); // Redirect to home/dashboard
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (err) {
-      setError("Invalid username or password");
+      console.log("Attempting login with username:", username);
+      await login(username, password);
+      console.log("Login successful, redirecting to splash screen");
+      navigate("/splash");
+    } catch (err: any) {
+      if (err.response) {
+        if (err.response.status === 401) {
+          setError("Invalid username or password.");
+        } else if (err.response.status === 403) {
+          setError("Your account is inactive. Please contact support.");
+        } else {
+          setError("An unexpected error occurred. Please try again.");
+        }
+      } else {
+        setError("Unable to connect to the server. Please try again later.");
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
+
+  if (isLoading) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <Box
@@ -63,7 +76,7 @@ const Login = () => {
         minHeight: "100vh",
         alignItems: "center",
         justifyContent: "center",
-        backgroundImage: "linear-gradient(to bottom right, #3b82f6, #6366f1)",
+        backgroundColor: "#0A1929",
         padding: 2,
       }}
     >
@@ -71,7 +84,7 @@ const Login = () => {
         sx={{
           display: "flex",
           flexDirection: "row",
-          backgroundColor: "white",
+          backgroundColor: "#132F4C",
           boxShadow: 3,
           borderRadius: 2,
           overflow: "hidden",
@@ -82,15 +95,25 @@ const Login = () => {
         <Box
           sx={{
             flex: 1,
-            background: `url('https://via.placeholder.com/500') no-repeat center center`,
-            backgroundSize: "cover",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            maxWidth: "400px",
           }}
-        ></Box>
-        <Card sx={{ flex: 1 }}>
-          <CardContent sx={{ padding: 4 }}>
+        >
+          <img
+            src="https://media.tenor.com/4HkLW40pwKgAAAAm/patrick-patrick-star.webp"
+            alt="Welcome or Logo"
+            width={300}
+            style={{ borderRadius: 12 }}
+          />
+        </Box>
+
+        <Card sx={{ flex: 1, backgroundColor: "#132F4C" }}>
+          <CardContent sx={{ padding: 5 }}>
             <Typography
               variant="h5"
-              sx={{ textAlign: "center", fontWeight: "bold", marginBottom: 2 }}
+              sx={{ textAlign: "center", fontWeight: "bold", marginBottom: 2, color: "white" }}
             >
               Welcome Back 👋
             </Typography>
@@ -99,7 +122,7 @@ const Login = () => {
               sx={{
                 textAlign: "center",
                 marginBottom: 3,
-                color: "text.secondary",
+                color: "white",
               }}
             >
               Please login to your account
@@ -118,21 +141,38 @@ const Login = () => {
             )}
 
             <form onSubmit={handleLogin}>
-              <Box
-                sx={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 2,
-                }}
-              >
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                {/* Username Field */}
                 <TextField
                   label="Username"
                   variant="outlined"
                   fullWidth
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  sx={{ backgroundColor: "white" }}
+                  disabled={isSubmitting}
+                  sx={{
+                    backgroundColor: "#0A1929",
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "#0A1929",
+                      borderRadius: "12px",
+                      color: "white",
+                    },
+                    "& .MuiInputLabel-root": {
+                      color: "#90caf9",
+                    },
+                    "& .MuiOutlinedInput-notchedOutline": {
+                      borderColor: "#90caf9",
+                    },
+                    "&:hover .MuiOutlinedInput-notchedOutline": {
+                      borderColor: "#64b5f6",
+                    },
+                    "& .MuiOutlinedInput-input": {
+                      color: "white",
+                    },
+                  }}
                 />
+
+                {/* Password Field */}
                 <TextField
                   label="Password"
                   type="password"
@@ -140,16 +180,38 @@ const Login = () => {
                   fullWidth
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  sx={{ backgroundColor: "white" }}
+                  disabled={isSubmitting}
+                  sx={{
+                    backgroundColor: "#0A1929",
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "#0A1929",
+                      borderRadius: "12px",
+                      color: "white",
+                    },
+                    "& .MuiInputLabel-root": {
+                      color: "#90caf9",
+                    },
+                    "& .MuiOutlinedInput-notchedOutline": {
+                      borderColor: "#90caf9",
+                    },
+                    "&:hover .MuiOutlinedInput-notchedOutline": {
+                      borderColor: "#64b5f6",
+                    },
+                    "& .MuiOutlinedInput-input": {
+                      color: "white",
+                    },
+                  }}
                 />
+
                 <Button
                   type="submit"
                   variant="contained"
                   color="primary"
                   fullWidth
-                  sx={{ padding: "12px 0" }}
+                  sx={{ padding: "12px 0", borderRadius: "12px" }}
+                  disabled={isSubmitting}
                 >
-                  Login
+                  {isSubmitting ? <CircularProgress size={24} /> : "Login"}
                 </Button>
               </Box>
             </form>

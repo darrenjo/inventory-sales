@@ -5,7 +5,6 @@ import {
   Divider,
   TextField,
   Button,
-  Pagination,
   Typography,
   Box,
   Stack,
@@ -109,13 +108,6 @@ const Customers = () => {
       </Stack>
 
       <CustomerTable customers={currentPageCustomers} onDeleteSuccess={handleDeleteSuccess} />
-
-      <Pagination
-        count={Math.ceil(filteredCustomers.length / itemsPerPage)}
-        page={page}
-        onChange={(_, value) => setPage(value)}
-        sx={{ mt: 3, display: "flex", justifyContent: "center" }}
-      />
 
       <CustForm
         open={openDialog}

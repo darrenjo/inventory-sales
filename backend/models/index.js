@@ -13,6 +13,7 @@ import "./transaction.js";
 import "./role.js";
 import "./permission.js";
 import "./rolePermission.js";
+import "./log.js";
 
 import Color from "./color.js";
 import Customer from "./customer.js";
@@ -26,6 +27,7 @@ import { Transaction, TransactionDetail } from "./transaction.js";
 import Role from "./role.js";
 import Permission from "./permission.js";
 import RolePermission from "./rolePermission.js";
+import Log from "./log.js";
 
 User.belongsTo(Role, { foreignKey: "roleId", as: "role" });
 
@@ -150,4 +152,5 @@ export {
   Role,
   Permission,
   RolePermission,
+  Log,
 };

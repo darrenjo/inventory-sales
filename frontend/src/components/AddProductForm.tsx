@@ -23,7 +23,6 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ onSuccess }) => {
   >([]);
   const [sellPrice, setSellPrice] = useState("");
 
-
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -57,23 +56,61 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ onSuccess }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <Stack spacing={3} sx={{ my: 2 }}>
+    <form onSubmit={handleSubmit} className="w-full">
+      <Stack spacing={3} sx={{ my: 2 }} className="w-full">
         <TextField
           label="Product Name"
           variant="outlined"
           value={name}
           onChange={(e) => setName(e.target.value)}
           required
+          fullWidth
+          className="w-full text-white"
+          InputProps={{
+            className: "rounded-md bg-black border-blue-500 border text-white",
+          }}
+          InputLabelProps={{
+            className: "text-blue-400",
+          }}
+          sx={{
+            "& .MuiInputLabel-root": {
+              transform: "translate(14px, 10px) scale(1)",
+            },
+            "& .MuiInputLabel-shrink": {
+              transform: "translate(5px, -18px) scale(0.75)",
+            },
+            "& .MuiOutlinedInput-notchedOutline": {
+              paddingTop: "8px",
+            },
+            "& legend": {
+              height: "11px",
+            },
+          }}
         />
 
         <TextField
+          select
           label="Category"
           variant="outlined"
           value={category}
           onChange={(e) => setCategory(e.target.value)}
           required
-        />
+          fullWidth
+          className="w-full"
+          sx={{
+            "& .MuiInputLabel-root": {
+              transform: "translate(14px, 10px) scale(1)",
+            },
+            "& .MuiInputLabel-shrink": {
+              transform: "translate(5px, -18px) scale(0.75)",
+            },
+          }}
+        >
+          <MenuItem value="fabric">Fabric</MenuItem>
+          <MenuItem value="kerah">Kerah</MenuItem>
+          <MenuItem value="manset">Manset</MenuItem>
+          <MenuItem value="others">Others</MenuItem>
+        </TextField>
 
         <TextField
           select
@@ -81,6 +118,15 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ onSuccess }) => {
           value={colorCode}
           onChange={(e) => setColorCode(e.target.value)}
           required
+          className="w-full"
+          sx={{
+            "& .MuiInputLabel-root": {
+              transform: "translate(14px, 10px) scale(1)",
+            },
+            "& .MuiInputLabel-shrink": {
+              transform: "translate(5px, -18px) scale(0.75)",
+            },
+          }}
         >
           {colorOptions.map((color) => (
             <MenuItem key={color.color_code} value={color.color_code}>
@@ -96,6 +142,15 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ onSuccess }) => {
           onChange={(e) => setSellPrice(e.target.value)}
           type="number"
           required
+          className="w-full"
+          sx={{
+            "& .MuiInputLabel-root": {
+              transform: "translate(14px, 10px) scale(1)",
+            },
+            "& .MuiInputLabel-shrink": {
+              transform: "translate(5px, -18px) scale(0.75)",
+            },
+          }}
         />
 
         <Button

@@ -1,3 +1,11 @@
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background-color: #121212; /* match your dark theme */
+  color: white; /* optional: default text color */
+}
+
 /* HOMEPAGE.css */
 .home-container {
   display: flex;
@@ -9,6 +17,7 @@
   flex-grow: 1;
   padding: 20px;
   margin-left: 250px; /* Offsets the sidebar width */
+  background-color: #121212;
 }
 
 /* Sidebar */
@@ -109,10 +118,11 @@ margin-bottom: 0;
 }
 
 .modal-content {
-  background: white;
+  background: #1e1e1e; 
+  color: white; 
   padding: 20px;
   border-radius: 8px;
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.4); /* stronger shadow for contrast */
   text-align: center;
 }
 
